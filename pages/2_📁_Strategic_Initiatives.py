@@ -105,7 +105,6 @@ PROJECTS = [
         "docs": [
             {"label": "Cost Discipline Tracker", "url": "#", "local": "AI Assistant/projects/profitability/tracker.md"},
             {"label": "Portland Lease Strategy", "url": "https://docs.google.com/document/d/10Sg3ZBJ_pkgaMeTl71e2UeODmO6daX9iTyQ1JUaUWTI/edit"},
-            {"label": "Zero-Based Budget", "url": "https://docs.google.com/spreadsheets/d/1rWgXVM7F3WfVSILvd3a27kMKYO9R8Sgm7q6Ba4AASNY/edit"},
         ],
     },
     {
