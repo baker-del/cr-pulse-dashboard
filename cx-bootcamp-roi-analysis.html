@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CX Bootcamp ROI Analysis | ClearlyRated</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1" integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ" crossorigin="anonymous"></script>
+    <style>
+        :root {
+            --bg: #f4f5f7; --card: #fff; --header: #1B2A4A;
+            --text: #1a1a2e; --muted: #6c757d; --white: #fff;
+            --accent: #2563eb; --green: #16a34a; --red: #dc2626; --amber: #f59e0b;
+            --border: #e5e7eb; --gap: 16px; --r: 10px;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:var(--bg); color:var(--text); line-height:1.5; }
+        .wrap { max-width:1440px; margin:0 auto; padding:20px; }
+
+        .hdr { background:var(--header); color:var(--white); padding:24px 32px; border-radius:var(--r); margin-bottom:var(--gap); }
+        .hdr h1 { font-size:22px; font-weight:700; }
+        .hdr .sub { font-size:13px; color:rgba(255,255,255,.6); margin-top:4px; }
+
+        .sec-title { font-size:14px; font-weight:700; color:var(--text); margin:24px 0 12px; padding-bottom:6px; border-bottom:2px solid var(--accent); display:inline-block; }
+
+        .kpi-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(175px,1fr)); gap:var(--gap); margin-bottom:var(--gap); }
+        .kpi { background:var(--card); border-radius:var(--r); padding:18px 20px; box-shadow:0 1px 3px rgba(0,0,0,.06); border-left:4px solid var(--accent); }
+        .kpi.g { border-left-color:var(--green); } .kpi.a { border-left-color:var(--amber); } .kpi.r { border-left-color:var(--red); }
+        .kpi-l { font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.8px; font-weight:700; margin-bottom:5px; }
+        .kpi-v { font-size:26px; font-weight:800; }
+        .kpi-s { font-size:11.5px; color:var(--muted); margin-top:3px; }
+        .kpi-s.g { color:var(--green); font-weight:600; }
+
+        .chart-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(400px,1fr)); gap:var(--gap); margin-bottom:var(--gap); }
+        .chart-box { background:var(--card); border-radius:var(--r); padding:20px 24px; box-shadow:0 1px 3px rgba(0,0,0,.06); }
+        .chart-box h3 { font-size:13px; font-weight:700; margin-bottom:14px; }
+        .chart-box canvas { max-height:300px; }
+
+        .tbl-box { background:var(--card); border-radius:var(--r); padding:20px 24px; box-shadow:0 1px 3px rgba(0,0,0,.06); overflow-x:auto; margin-bottom:var(--gap); }
+        .tbl-box h3 { font-size:13px; font-weight:700; margin-bottom:12px; }
+        table { width:100%; border-collapse:collapse; font-size:12.5px; }
+        thead th { text-align:left; padding:9px 10px; border-bottom:2px solid var(--border); color:var(--muted); font-weight:700; font-size:10.5px; text-transform:uppercase; letter-spacing:.4px; white-space:nowrap; }
+        tbody td { padding:9px 10px; border-bottom:1px solid #f3f4f6; }
+        tbody tr:hover { background:#f8fafc; }
+        .tot td { font-weight:800; border-top:2px solid var(--text); border-bottom:none; background:#f8fafc; }
+        .tag { display:inline-block; padding:2px 7px; border-radius:4px; font-size:10.5px; font-weight:600; }
+        .tw { background:#dcfce7; color:#166534; } .ta { background:#dbeafe; color:#1e40af; } .tl { background:#fee2e2; color:#991b1b; }
+        .tu { background:#fef3c7; color:#92400e; }
+
+        .note { background:#fffbeb; border:1px solid #fde68a; border-radius:var(--r); padding:14px 18px; margin-bottom:var(--gap); font-size:12.5px; color:#92400e; }
+        .note h4 { font-size:12.5px; margin-bottom:5px; color:#78350f; }
+        .note ul { margin-left:16px; } .note li { margin-bottom:3px; }
+
+        .footer { text-align:center; font-size:11px; color:var(--muted); padding:14px 0; }
+        .hl { background:#f0fdf4; }
+        @media(max-width:768px){ .kpi-row{grid-template-columns:repeat(2,1fr);} .chart-row{grid-template-columns:1fr;} }
+        @media print { body{background:#fff;} .chart-box,.kpi,.tbl-box{box-shadow:none;border:1px solid #ddd;} }
+    </style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="hdr">
+    <h1>CX Bootcamp Program — Marketing Spend / ROI Analysis</h1>
+    <div class="sub">6 Bootcamps (Oct 2025 – Mar 2026) &nbsp;|&nbsp; S&amp;M Efficiency Initiative &nbsp;|&nbsp; Data: HubSpot CRM, March 23 2026</div>
+</div>
+
+<!-- ==================== METHODOLOGY ==================== -->
+<div class="note">
+    <h4>Methodology</h4>
+    <ul>
+        <li><strong>Deals identified two ways:</strong> (1) Deals with <code>deal_source = "CX Bootcamp"</code> (15 tagged), and (2) deals associated with bootcamp registrant contacts but not tagged (5 additional). <strong>Tagged deals alone miss $98K in pipeline + closed-won.</strong></li>
+        <li><strong>Contact-to-bootcamp mapping:</strong> SF bootcamp (17) confirmed via registration list. Others estimated by createdate batch + company geography. ~7 contacts unassigned.</li>
+        <li><strong>KC bootcamp (Mar 4):</strong> Only 19 days old — likely incomplete data in HubSpot.</li>
+        <li><strong>Attribution:</strong> Full deal value credited to bootcamp (first-touch). Cost estimates: ~$4.5K base + $1.5K travel (SMPS) or $3K travel (CR-hosted).</li>
+    </ul>
+</div>
+
+<!-- ==================== PROGRAM KPIs ==================== -->
+<div class="sec-title">Program Totals</div>
+<div class="kpi-row">
+    <div class="kpi">
+        <div class="kpi-l">Total Registrants</div>
+        <div class="kpi-v">90</div>
+        <div class="kpi-s">lead_source = "CX Bootcamps"</div>
+    </div>
+    <div class="kpi">
+        <div class="kpi-l">MQL Conversion</div>
+        <div class="kpi-v">83%</div>
+        <div class="kpi-s">75 of 90 → MQL</div>
+    </div>
+    <div class="kpi">
+        <div class="kpi-l">SQL + Opp + Customer</div>
+        <div class="kpi-v">11</div>
+        <div class="kpi-s">8 SQL, 1 Opp, 2 Customers</div>
+    </div>
+    <div class="kpi g">
+        <div class="kpi-l">Closed-Won Revenue</div>
+        <div class="kpi-v">$68K</div>
+        <div class="kpi-s g">2 deals (Big-D $40K, AEI $28K)</div>
+    </div>
+    <div class="kpi a">
+        <div class="kpi-l">Active Pipeline</div>
+        <div class="kpi-v">$187K</div>
+        <div class="kpi-s">13 open deals</div>
+    </div>
+    <div class="kpi r">
+        <div class="kpi-l">Closed Lost</div>
+        <div class="kpi-v">$154K</div>
+        <div class="kpi-s">7 deals lost</div>
+    </div>
+    <div class="kpi">
+        <div class="kpi-l">Total Program Cost</div>
+        <div class="kpi-v">$37.5K</div>
+        <div class="kpi-s">5x $6K SMPS + 1x $7.5K CR</div>
+    </div>
+    <div class="kpi g">
+        <div class="kpi-l">ROI (Closed Won)</div>
+        <div class="kpi-v">81%</div>
+        <div class="kpi-s g">($68K-$37.5K)/$37.5K</div>
+    </div>
+</div>
+<div class="kpi-row">
+    <div class="kpi g">
+        <div class="kpi-l">Potential ROI (Won+Pipeline)</div>
+        <div class="kpi-v">580%</div>
+        <div class="kpi-s g">($68K+$187K)/$37.5K</div>
+    </div>
+    <div class="kpi">
+        <div class="kpi-l">Cost / Registrant</div>
+        <div class="kpi-v">$417</div>
+        <div class="kpi-s">$37.5K / 90</div>
+    </div>
+    <div class="kpi">
+        <div class="kpi-l">Cost / Deal Created</div>
+        <div class="kpi-v">$1,875</div>
+        <div class="kpi-s">$37.5K / 20 deals</div>
+    </div>
+    <div class="kpi">
+        <div class="kpi-l">Registrant → Deal Rate</div>
+        <div class="kpi-v">21%</div>
+        <div class="kpi-s">19 contacts w/ deals / 90</div>
+    </div>
+    <div class="kpi">
+        <div class="kpi-l">Deal Win Rate</div>
+        <div class="kpi-v">22%</div>
+        <div class="kpi-s">2 won / 9 closed deals</div>
+    </div>
+    <div class="kpi">
+        <div class="kpi-l">Total Pipeline Generated</div>
+        <div class="kpi-v">$409K</div>
+        <div class="kpi-s">Won + Active + Lost</div>
+    </div>
+</div>
+
+<!-- ==================== CHARTS ==================== -->
+<div class="chart-row">
+    <div class="chart-box"><h3>Funnel by Bootcamp (Contacts)</h3><canvas id="c1"></canvas></div>
+    <div class="chart-box"><h3>Pipeline Value by Bootcamp ($)</h3><canvas id="c2"></canvas></div>
+</div>
+<div class="chart-row">
+    <div class="chart-box"><h3>Deal Outcomes (20 Deals, $408.6K Total)</h3><canvas id="c3"></canvas></div>
+    <div class="chart-box"><h3>Cost vs. Won + Pipeline by Bootcamp</h3><canvas id="c4"></canvas></div>
+</div>
+
+<!-- ==================== BOOTCAMP TABLE ==================== -->
+<div class="sec-title">Per-Bootcamp Breakdown</div>
+<div class="tbl-box">
+    <h3>Bootcamp Performance Summary</h3>
+    <table>
+        <thead><tr>
+            <th>Bootcamp</th><th>Date</th><th>Location</th><th>Host</th>
+            <th>Registrants</th><th>MQLs</th><th>SQL+</th><th>Deals</th>
+            <th>Closed Won</th><th>Active Pipeline</th><th>Closed Lost</th>
+            <th>Cost</th><th>ROI</th>
+        </tr></thead>
+        <tbody>
+            <tr>
+                <td><strong>#1</strong></td><td>Oct 30 '25</td><td>Columbia, MD</td><td>SMPS</td>
+                <td>~15</td><td>12</td><td>3</td><td>5</td>
+                <td><span class="tag tw">$40,000</span></td>
+                <td><span class="tag ta">$10,000</span></td>
+                <td><span class="tag tl">$123,876</span></td>
+                <td>$6,000</td>
+                <td style="color:#16a34a;font-weight:700">567%</td>
+            </tr>
+            <tr>
+                <td><strong>#2</strong></td><td>Nov 5 '25</td><td>Columbia, SC</td><td>SMPS</td>
+                <td>~25</td><td>22</td><td>2</td><td>3</td>
+                <td><span class="tag tw">$0</span></td>
+                <td><span class="tag ta">$0</span></td>
+                <td><span class="tag tl">$0</span></td>
+                <td>$6,000</td>
+                <td style="color:#dc2626;font-weight:700">-100%</td>
+            </tr>
+            <tr>
+                <td><strong>#3</strong></td><td>Nov 14 '25</td><td>New York, NY</td><td>SMPS</td>
+                <td>~10</td><td>10</td><td>0</td><td>0</td>
+                <td><span class="tag tw">$0</span></td>
+                <td><span class="tag ta">$0</span></td>
+                <td><span class="tag tl">$0</span></td>
+                <td>$6,000</td>
+                <td style="color:#dc2626;font-weight:700">-100%</td>
+            </tr>
+            <tr class="hl">
+                <td><strong>#4</strong></td><td>Dec 10 '25</td><td>San Francisco</td><td>SMPS</td>
+                <td>17</td><td>14</td><td>1</td><td>5</td>
+                <td><span class="tag tw">$28,000</span></td>
+                <td><span class="tag ta">$140,700</span></td>
+                <td><span class="tag tl">$0</span></td>
+                <td>$6,000</td>
+                <td style="color:#16a34a;font-weight:700">367%</td>
+            </tr>
+            <tr>
+                <td><strong>#5</strong></td><td>Feb 11 '26</td><td>Los Angeles</td><td>SMPS</td>
+                <td>~11</td><td>7</td><td>3</td><td>4</td>
+                <td><span class="tag tw">$0</span></td>
+                <td><span class="tag ta">$36,000</span></td>
+                <td><span class="tag tl">$10,000</span></td>
+                <td>$6,000</td>
+                <td style="color:var(--amber);font-weight:700">Pipeline</td>
+            </tr>
+            <tr>
+                <td><strong>#6</strong></td><td>Mar 4 '26</td><td>Kansas City</td><td>ClearlyRated</td>
+                <td>~5*</td><td>3</td><td>0</td><td>2</td>
+                <td><span class="tag tw">$0</span></td>
+                <td><span class="tag ta">$0</span></td>
+                <td><span class="tag tl">$20,000</span></td>
+                <td>$7,500</td>
+                <td style="color:var(--muted);font-weight:700">Too Early</td>
+            </tr>
+            <tr>
+                <td><em>Unassigned</em></td><td>—</td><td>—</td><td>—</td>
+                <td>~7</td><td>—</td><td>—</td><td>1</td>
+                <td>—</td><td><span class="tag ta">$0</span></td><td>—</td><td>—</td><td>—</td>
+            </tr>
+            <tr class="tot">
+                <td>TOTAL</td><td></td><td></td><td></td>
+                <td>90</td><td>75</td><td>11</td><td>20</td>
+                <td>$68,000</td><td>$186,700</td><td>$153,876</td><td>$37,500</td>
+                <td style="color:#16a34a">81%</td>
+            </tr>
+        </tbody>
+    </table>
+    <p style="font-size:10.5px;color:var(--muted);margin-top:8px;">* KC data likely incomplete — bootcamp was 19 days ago. SF registrants confirmed via registration list; others estimated by createdate + geography.</p>
+</div>
+
+<!-- ==================== DEAL TABLE ==================== -->
+<div class="sec-title">Deal Detail (20 Deals)</div>
+<div class="tbl-box">
+    <h3>15 Tagged (deal_source = CX Bootcamp) + 5 Untagged via Registrant Cross-Reference</h3>
+    <table>
+        <thead><tr><th>Deal</th><th>Amount</th><th>Stage</th><th>Source Tag</th><th>Close Date</th><th>Registrant Contact</th><th>Bootcamp</th></tr></thead>
+        <tbody>
+            <!-- CLOSED WON -->
+            <tr class="hl">
+                <td><strong>Big-D Construction</strong></td><td>$40,000</td>
+                <td><span class="tag tw">Closed Won</span></td>
+                <td><span class="tag tw">Tagged</span></td>
+                <td>Feb 6 '26</td><td>Beckie Austin</td><td>#1 Columbia MD</td>
+            </tr>
+            <tr class="hl">
+                <td><strong>Affiliated Engineers - AS TESTING</strong></td><td>$28,000</td>
+                <td><span class="tag tw">Closed Won</span></td>
+                <td><span class="tag tu">Untagged</span></td>
+                <td>Mar 21 '26</td><td>Elaine Moal</td><td>#4 San Francisco</td>
+            </tr>
+            <!-- ACTIVE -->
+            <tr><td>Affiliated Engineers - New Deal</td><td>$60,000</td><td><span class="tag ta">Discovery</span></td><td><span class="tag tu">Untagged</span></td><td>Sep 30 '26</td><td>Elaine Moal</td><td>#4 San Francisco</td></tr>
+            <tr><td>HOK - SF Pilot</td><td>$29,880</td><td><span class="tag ta">Discovery</span></td><td><span class="tag tw">Tagged</span></td><td>May 31 '26</td><td>Rebekah McMenamin</td><td>#4 San Francisco</td></tr>
+            <tr><td>WB Engineers+Consultants</td><td>$26,820</td><td><span class="tag ta">Discovery</span></td><td><span class="tag tw">Tagged</span></td><td>May 31 '26</td><td>Julie Pampuch</td><td>#4 San Francisco</td></tr>
+            <tr><td>Kier + Wright</td><td>$24,000</td><td><span class="tag ta">Demo</span></td><td><span class="tag tw">Tagged</span></td><td>Sep 30 '26</td><td>Marilynn Stratton</td><td>#4 San Francisco</td></tr>
+            <tr><td>McCullough</td><td>$16,000</td><td><span class="tag ta">Discovery</span></td><td><span class="tag tw">Tagged</span></td><td>Sep 30 '26</td><td>Melanie Loria</td><td>#5 Los Angeles</td></tr>
+            <tr><td>Brandow &amp; Johnston</td><td>$10,000</td><td><span class="tag ta">ROI Call</span></td><td><span class="tag tu">Untagged</span></td><td>Apr 30 '26</td><td>—</td><td>#5 Los Angeles</td></tr>
+            <tr><td>Arium AE</td><td>$10,000</td><td><span class="tag ta">Discovery</span></td><td><span class="tag tw">Tagged</span></td><td>May 29 '26</td><td>Cynthia Stuber</td><td>#1 Columbia MD</td></tr>
+            <tr><td>PCL Construction - Baseline</td><td>$10,000</td><td><span class="tag ta">Discovery</span></td><td><span class="tag tw">Tagged</span></td><td>Jun 30 '26</td><td>Monica Molinaro</td><td>#5 Los Angeles</td></tr>
+            <tr><td>Development Facilitators</td><td>$0</td><td><span class="tag ta">Sol. Alignment</span></td><td><span class="tag tw">Tagged</span></td><td>Jun 26 '26</td><td>Jordan Varholy</td><td>Unassigned</td></tr>
+            <tr><td>Barton Malow</td><td>$0</td><td><span class="tag ta">Sol. Alignment</span></td><td><span class="tag tu">Untagged</span></td><td>Apr 30 '26</td><td>Dana Lancour</td><td>#6 Kansas City</td></tr>
+            <tr><td>bainc.com (Batson Associates)</td><td>$0</td><td><span class="tag ta">Discovery</span></td><td><span class="tag tw">Tagged</span></td><td>Sep 30 '26</td><td>Kelsie Anderson</td><td>#2 Columbia SC</td></tr>
+            <!-- CLOSED LOST -->
+            <tr><td>HITT Contracting - CFT</td><td>$73,876</td><td><span class="tag tl">Closed Lost</span></td><td><span class="tag tw">Tagged</span></td><td>Feb 20 '26</td><td>Lauren Kim</td><td>#1 Columbia MD</td></tr>
+            <tr><td>Davis Construction - CFT</td><td>$50,000</td><td><span class="tag tl">Closed Lost</span></td><td><span class="tag tw">Tagged</span></td><td>Mar 12 '26</td><td>Kate Attilio</td><td>#1 Columbia MD</td></tr>
+            <tr><td>Foresight Construction</td><td>$20,000</td><td><span class="tag tl">Closed Lost</span></td><td><span class="tag tw">Tagged</span></td><td>Feb 23 '26</td><td>Hillary Turlington</td><td>#6 Kansas City</td></tr>
+            <tr><td>ECORP Consulting</td><td>$10,000</td><td><span class="tag tl">Closed Lost</span></td><td><span class="tag tw">Tagged</span></td><td>Mar 23 '26</td><td>Madeline Field</td><td>#5 Los Angeles</td></tr>
+            <tr><td>Boudreaux Group</td><td>$0</td><td><span class="tag tl">Closed Lost</span></td><td><span class="tag tw">Tagged</span></td><td>Mar 3 '26</td><td>Rachel John</td><td>#2 Columbia SC</td></tr>
+            <tr><td>Dewberry</td><td>$0</td><td><span class="tag tl">Closed Lost</span></td><td><span class="tag tw">Tagged</span></td><td>Mar 3 '26</td><td>Taylor Arias</td><td>#1 Columbia MD</td></tr>
+            <tr><td>Boomerang Design</td><td>$0</td><td><span class="tag tl">Closed Lost</span></td><td><span class="tag tu">Untagged</span></td><td>Mar 17 '26</td><td>Anna Lucas</td><td>#2 Columbia SC</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- ==================== DATA GAP CALLOUT ==================== -->
+<div class="note" style="background:#eff6ff;border-color:#93c5fd;color:#1e40af;">
+    <h4 style="color:#1d4ed8;">Deal Tagging Gap: 5 of 20 deals (25%) missing deal_source = "CX Bootcamp"</h4>
+    <ul>
+        <li>Affiliated Engineers (2 deals, $88K) — Elaine Moal is a confirmed SF bootcamp registrant, but neither deal is tagged.</li>
+        <li>Barton Malow, Brandow &amp; Johnston, Boomerang Design also untagged.</li>
+        <li><strong>Action:</strong> Ask sales to tag deal_source when creating deals from bootcamp leads, or automate via workflow based on contact lead_source.</li>
+    </ul>
+</div>
+
+<!-- ==================== TAKEAWAYS ==================== -->
+<div class="sec-title">Key Takeaways</div>
+<div class="tbl-box">
+    <table>
+        <thead><tr><th style="width:25%">Finding</th><th>Detail</th><th>Recommendation</th></tr></thead>
+        <tbody>
+            <tr>
+                <td><strong>SF is the standout</strong></td>
+                <td>17 registrants → $28K closed + $140.7K pipeline. 5 deals (29% deal rate). Best pipeline density of any bootcamp by far.</td>
+                <td>Double down on West Coast AEC. Consider follow-up SF event in H2 2026.</td>
+            </tr>
+            <tr>
+                <td><strong>Columbia MD generated most revenue</strong></td>
+                <td>~15 registrants → $40K closed won (Big-D). However, $123.9K in closed-lost shows deals were created but didn't convert.</td>
+                <td>Strong market for generating pipeline. Review lost deal reasons (HITT $74K, Davis $50K) — was it timing, product fit, or pricing?</td>
+            </tr>
+            <tr>
+                <td><strong>Columbia SC: high attendance, zero pipeline $</strong></td>
+                <td>Largest cohort (~25) but $0 in active or won pipeline. 3 deals all at $0 or lost.</td>
+                <td>Investigate: Were BDRs actively working these? Are SC firms the right ICP? May need different nurture for smaller SE firms.</td>
+            </tr>
+            <tr>
+                <td><strong>NYC: zero deals created</strong></td>
+                <td>~10 registrants, all MQL, no SQL progression, no deals at all.</td>
+                <td>Either wrong ICP or follow-up gap. Re-engage with targeted outreach or different value prop for NYC AEC market.</td>
+            </tr>
+            <tr>
+                <td><strong>LA showing early promise</strong></td>
+                <td>11 registrants, 3 SQLs already, $36K pipeline. Highest SQL conversion rate (27%).</td>
+                <td>Still early (6 weeks old). Monitor closely — LA could match SF trajectory.</td>
+            </tr>
+            <tr>
+                <td><strong>Program ROI is strong at 81%</strong></td>
+                <td>$68K won on $37.5K spend. With $187K pipeline, potential ROI is 580%+. $409K total pipeline generated.</td>
+                <td>CX Bootcamps are a proven channel. Scale to 8-10/year if unit economics hold.</td>
+            </tr>
+            <tr>
+                <td><strong>CRM hygiene needs work</strong></td>
+                <td>25% of bootcamp deals missing deal_source tag. No "which bootcamp" field on contacts.</td>
+                <td>1) Add "Bootcamp Attended" multi-select property. 2) Automate deal_source from contact lead_source via workflow.</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="footer">ClearlyRated — S&amp;M Efficiency: CX Bootcamp ROI Analysis &nbsp;|&nbsp; March 23, 2026</div>
+</div>
+
+<!-- ==================== CHARTS ==================== -->
+<script>
+const BC = ['#1 Columbia MD','#2 Columbia SC','#3 New York','#4 San Francisco','#5 Los Angeles','#6 Kansas City'];
+
+new Chart(document.getElementById('c1'), {
+    type:'bar',
+    data:{
+        labels:BC,
+        datasets:[
+            {label:'Lead',data:[0,1,0,2,1,0],backgroundColor:'#e5e7eb',borderRadius:2},
+            {label:'MQL',data:[12,22,10,14,7,3],backgroundColor:'#93c5fd',borderRadius:2},
+            {label:'SQL/Opp/Customer',data:[3,2,0,1,3,0],backgroundColor:'#2563eb',borderRadius:2}
+        ]
+    },
+    options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{position:'top',labels:{usePointStyle:true,padding:14,font:{size:11}}}},
+        scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,beginAtZero:true,title:{display:true,text:'Contacts'}}}
+    }
+});
+
+new Chart(document.getElementById('c2'), {
+    type:'bar',
+    data:{
+        labels:BC,
+        datasets:[
+            {label:'Closed Won',data:[40000,0,0,28000,0,0],backgroundColor:'#16a34a',borderRadius:3},
+            {label:'Active Pipeline',data:[10000,0,0,140700,36000,0],backgroundColor:'#2563eb',borderRadius:3},
+            {label:'Closed Lost',data:[123876,0,0,0,10000,20000],backgroundColor:'#fca5a5',borderRadius:3}
+        ]
+    },
+    options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{position:'top',labels:{usePointStyle:true,padding:14,font:{size:11}}},
+            tooltip:{callbacks:{label:function(c){return c.dataset.label+': $'+c.parsed.y.toLocaleString();}}}},
+        scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{callback:function(v){return v>=1000?'$'+(v/1000)+'K':'$'+v;}}}}
+    }
+});
+
+new Chart(document.getElementById('c3'), {
+    type:'doughnut',
+    data:{
+        labels:['Closed Won ($68K)','Active Pipeline ($187K)','Closed Lost ($154K)'],
+        datasets:[{data:[68000,186700,153876],backgroundColor:['#16a34a','#2563eb','#fca5a5'],borderColor:'#fff',borderWidth:3}]
+    },
+    options:{
+        responsive:true,maintainAspectRatio:false,cutout:'55%',
+        plugins:{legend:{position:'bottom',labels:{usePointStyle:true,padding:14,font:{size:11}}},
+            tooltip:{callbacks:{label:function(c){var t=c.dataset.data.reduce((a,b)=>a+b,0);return c.label+' ('+((c.parsed/t)*100).toFixed(0)+'%)';}}}}
+    }
+});
+
+new Chart(document.getElementById('c4'), {
+    type:'bar',
+    data:{
+        labels:BC,
+        datasets:[
+            {label:'Cost',data:[6000,6000,6000,6000,6000,7500],backgroundColor:'#fca5a5',borderRadius:3},
+            {label:'Won + Pipeline',data:[50000,0,0,168700,36000,0],backgroundColor:'#86efac',borderRadius:3}
+        ]
+    },
+    options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{position:'top',labels:{usePointStyle:true,padding:14,font:{size:11}}},
+            tooltip:{callbacks:{label:function(c){return c.dataset.label+': $'+c.parsed.y.toLocaleString();}}}},
+        scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{callback:function(v){return v>=1000?'$'+(v/1000)+'K':'$'+v;}}}}
+    }
+});
+</script>
+</body>
+</html>

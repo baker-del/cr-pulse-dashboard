@@ -1,0 +1,9 @@
+[theme]
+primaryColor             = "#0F7D64"   # Green/300 — brand primary
+backgroundColor          = "#F6F6F6"   # Neutral/100
+secondaryBackgroundColor = "#FFFFFF"   # Neutral/00
+textColor                = "#171717"   # Dark Grey
+font                     = "sans serif"
+
+[browser]
+gatherUsageStats = false

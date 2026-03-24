@@ -1,0 +1,47 @@
+KPI,Owner,2026_Target,Q1,Q2,Q3,Q4
+New Logo Pipeline Created,Marketing,10967504,1508344,2818076,3176162,2699691
+New Logo Pipeline - Staffing,Marketing,1440266,351633,363000,363000,363000
+New Logo Pipeline - Accounting,Marketing,2227500,540000,540000,573750,573750
+New Logo Pipeline - AEC,Marketing,7299738,1381941,1915076,2239412,1762941
+Renewal Risk ($ at Risk in Next 180 Days),CS,<10%,<10%,<10%,<10%,<10%
+Expansion Pipeline (Next 180 Days),CS,2.0-3.0x coverage,107000,133750,133750,160500
+Core Product Adoption (Workflow Penetration),Product + CS,Increase vs baseline,,,
+CFT - Monthly Active Users,Product,TBD,,,,
+Total Surveys Sent,Product,55000,55000,,,
+CRS - Monthly Active Users,Product,900,900,,,
+30-day Response Rate excluding Express,Engineering,15%,15%,15%,15%,15%
+30-day Response Rate (Overall),Engineering,,,,,
+Tickets Resolved in Tier 1 within SLA,Engineering,>=95%,>=95%,>=95%,>=95%,>=95%
+Tickets out of SLA,Engineering,0,0,0,0,0
+Tickets Created (Week),Engineering,,,,,
+Data OPS Tickets missing deadline,Data OPS,<5%,<5%,<5%,<5%,<5%
+Incidents,Engineering,0,0,0,0,0
+AI Coded %,Engineering,,,,,
+Emails & SMS Sent,Engineering,,,,,
+MS Placement in Box,Engineering,,,,,
+Survey Click Rate (30-day),Engineering,,,,
+New Logo Qualified Pipeline Coverage,Sales,9779906,1508344,2220532,2829976,3221054
+New Logo Qualified Pipeline Coverage - SAL,Sales,1207266,301000,,,
+New Logo Qualified Pipeline Coverage - AEC,Sales,4080000,1020000,,,
+Win Rate (Overall),Sales,20%,20%,20%,20%,20%
+Win Rate (SAL),Sales,20%,20%,20%,20%,20%
+Win Rate (AEC),Sales,22.50%,22.50%,22.50%,22.50%,22.50%
+ACV (Overall),Sales,,,,,
+ACV (SAL),Sales,,,,,
+ACV (AEC),Sales,,,,,
+New Logo ARR,Sales,2078230,320523,471863,601370,684474
+SQL,Sales,524,122,134,143,125
+Cost/Inbound SQL,Marketing,1433,1433,1433,1433,1433
+Expansion ARR,CS,214000,42800,53500,53500,64200
+NRR,CS,95%,95%,95%,95%,95%
+GRR,CS,90%,90%,90%,90%,90%
+Logo Retention,CS,90%,90%,90%,90%,90%
+Cash EBITDA (Plan vs. Variance),Finance,-3%,,,,
+Employee NPS,CEO,+50,-30,-15,0,15
+High Risk Accounts (Next 6 Months),CS,,,,,
+High Risk Account ARR (Next 6 Months),CS,,,,,
+Account Risk - Product Issues,CS,,,,,
+Account Risk - Support Issues,CS,,,,,
+Account Risk - Response Rate Issues,CS,,,,,
+Account Risk - Low Surveys Sent,CS,,,,,
+ARR at Risk - Product Issues,CS,,,,,
