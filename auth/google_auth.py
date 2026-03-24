@@ -24,11 +24,18 @@ from google.auth.transport import requests as google_requests
 _ENV_PATH = Path(__file__).parent.parent / ".env"
 _TOKEN_PATH = Path(__file__).parent.parent / ".auth_token.json"
 
-ALLOWED_DOMAIN  = os.getenv("ALLOWED_DOMAIN", "").strip()
 GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 SCOPES          = "openid email profile"
 TOKEN_MAX_AGE   = 30 * 24 * 60 * 60  # 30 days in seconds
+
+
+def _get_secret(key: str, default: str = "") -> str:
+    """Read from st.secrets (Streamlit Cloud) first, then os.getenv (local)."""
+    try:
+        return st.secrets[key]
+    except (KeyError, FileNotFoundError, AttributeError):
+        return os.getenv(key, default).strip()
 
 
 # ── Token persistence ────────────────────────────────────────────────────────────
@@ -53,7 +60,7 @@ def _load_token() -> dict | None:
         if age > TOKEN_MAX_AGE:
             _TOKEN_PATH.unlink(missing_ok=True)
             return None
-        if not data.get("email", "").endswith(f"@{ALLOWED_DOMAIN}"):
+        if not data.get("email", "").endswith(f"@{_get_secret('ALLOWED_DOMAIN')}"):
             _TOKEN_PATH.unlink(missing_ok=True)
             return None
         return data
@@ -69,11 +76,11 @@ def _clear_token():
 
 # ── Helpers ─────────────────────────────────────────────────────────────────────
 def _cfg():
-    """Return (client_id, client_secret, redirect_uri) from env, or stop with error."""
+    """Return (client_id, client_secret, redirect_uri) from st.secrets or env."""
     load_dotenv(_ENV_PATH, override=True)
-    client_id     = os.getenv("GOOGLE_CLIENT_ID", "").strip()
-    client_secret = os.getenv("GOOGLE_CLIENT_SECRET", "").strip()
-    redirect_uri  = os.getenv("OAUTH_REDIRECT_URI", "http://localhost:8501").strip()
+    client_id     = _get_secret("GOOGLE_CLIENT_ID")
+    client_secret = _get_secret("GOOGLE_CLIENT_SECRET")
+    redirect_uri  = _get_secret("OAUTH_REDIRECT_URI", "http://localhost:8501")
     if not client_id or not client_secret:
         st.error(
             "Google OAuth is not configured. "
@@ -120,7 +127,7 @@ def is_authenticated() -> bool:
     # Check session state first
     if (
         st.session_state.get("authenticated", False)
-        and st.session_state.get("user_email", "").endswith(f"@{ALLOWED_DOMAIN}")
+        and st.session_state.get("user_email", "").endswith(f"@{_get_secret('ALLOWED_DOMAIN')}")
     ):
         return True
 
@@ -173,7 +180,7 @@ def _handle_callback() -> bool:
         email  = id_info.get("email", "")
         domain = email.split("@")[-1] if "@" in email else ""
 
-        if domain != ALLOWED_DOMAIN:
+        if domain != _get_secret('ALLOWED_DOMAIN'):
             st.session_state["auth_error"] = (
                 f"Access denied — only **@{ALLOWED_DOMAIN}** accounts can sign in. "
                 f"You signed in as **{email}**."
