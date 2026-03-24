@@ -1,5 +1,5 @@
 """
-Google OAuth 2.0 authentication — restricted to @clearlyrated.com accounts.
+Google OAuth 2.0 authentication — restricted to allowed domains.
 
 Setup (one-time):
   1. Go to https://console.cloud.google.com → APIs & Services → Credentials
@@ -38,6 +38,18 @@ def _get_secret(key: str, default: str = "") -> str:
         return os.getenv(key, default).strip()
 
 
+def _allowed_domains() -> set[str]:
+    """Return the set of allowed email domains (comma-separated in config)."""
+    raw = _get_secret("ALLOWED_DOMAINS", _get_secret("ALLOWED_DOMAIN"))
+    return {d.strip().lower() for d in raw.split(",") if d.strip()}
+
+
+def _is_allowed_email(email: str) -> bool:
+    """Check if an email belongs to one of the allowed domains."""
+    domain = email.split("@")[-1].lower() if "@" in email else ""
+    return domain in _allowed_domains()
+
+
 # ── Token persistence ────────────────────────────────────────────────────────────
 def _save_token(email: str, name: str, picture: str):
     """Save auth token to disk for 30-day persistence."""
@@ -60,7 +72,7 @@ def _load_token() -> dict | None:
         if age > TOKEN_MAX_AGE:
             _TOKEN_PATH.unlink(missing_ok=True)
             return None
-        if not data.get("email", "").endswith(f"@{_get_secret('ALLOWED_DOMAIN')}"):
+        if not _is_allowed_email(data.get("email", "")):
             _TOKEN_PATH.unlink(missing_ok=True)
             return None
         return data
@@ -127,7 +139,7 @@ def is_authenticated() -> bool:
     # Check session state first
     if (
         st.session_state.get("authenticated", False)
-        and st.session_state.get("user_email", "").endswith(f"@{_get_secret('ALLOWED_DOMAIN')}")
+        and _is_allowed_email(st.session_state.get("user_email", ""))
     ):
         return True
 
@@ -180,9 +192,10 @@ def _handle_callback() -> bool:
         email  = id_info.get("email", "")
         domain = email.split("@")[-1] if "@" in email else ""
 
-        if domain != _get_secret('ALLOWED_DOMAIN'):
+        if not _is_allowed_email(email):
+            domains = ", ".join(f"@{d}" for d in sorted(_allowed_domains()))
             st.session_state["auth_error"] = (
-                f"Access denied — only **@{ALLOWED_DOMAIN}** accounts can sign in. "
+                f"Access denied — only **{domains}** accounts can sign in. "
                 f"You signed in as **{email}**."
             )
             return False
