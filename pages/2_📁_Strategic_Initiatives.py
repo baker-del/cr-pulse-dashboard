@@ -128,6 +128,9 @@ PROJECTS = [
         "docs": [
             {"label": "Prototype Q2 Shortlist (Confluence)", "url": "https://clearlyrated.atlassian.net/wiki/spaces/PT/pages/2897084422/Prism+Prototype+Ideas+Q2+Shortlist"},
             {"label": "PRISM Initiative Folder", "url": "#", "local": "AI Assistant/projects/prism/"},
+            {"label": "Roadmap Tracker (Q1 & Q2)", "url": "https://clearlyrated.atlassian.net/jira/dashboards/12108"},
+            {"label": "Story & Defect Dashboard", "url": "https://clearlyrated.atlassian.net/jira/dashboards/12075"},
+            {"label": "Epic Planning Board", "url": "https://clearlyrated.atlassian.net/jira/dashboards/12042"},
         ],
     },
 ]
