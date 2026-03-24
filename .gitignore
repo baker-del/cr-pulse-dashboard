@@ -1,10 +1,13 @@
 # Credentials — never commit these
 google_credentials.json
+.auth_token.json
 .env
-*.json
 
-# Local database — cloud uses PostgreSQL via DATABASE_URL
-database/kpi_dashboard.db
+# HubSpot data dumps
+hubspot_*.json
+scripts/temp_*.json
+
+# Python
 
 # Python
 __pycache__/
