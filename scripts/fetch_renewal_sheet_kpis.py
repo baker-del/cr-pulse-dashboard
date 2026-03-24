@@ -14,19 +14,23 @@ Usage:
 """
 
 import io
+import os
 import sys
 from pathlib import Path
 from datetime import date
 
 import pandas as pd
 import requests
+from dotenv import load_dotenv
+
+load_dotenv(Path(__file__).parent.parent / ".env")
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from database.db import get_db
 from utils.kpi_calculator import calculate_variance, is_inverse_kpi
 
-SPREADSHEET_ID = "1tPU0Pmpm0CkhjsG_QYIwej_hiSqdOSzz9y8svOR5nTQ"
+SPREADSHEET_ID = os.getenv("RENEWAL_SPREADSHEET_ID", "").strip()
 WORKSHEET_NAME = "Retention Analysis"   # actual tab name
 SHEET_GID      = 1991609223
 SHEET_PUBLIC   = False

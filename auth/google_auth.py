@@ -24,7 +24,7 @@ from google.auth.transport import requests as google_requests
 _ENV_PATH = Path(__file__).parent.parent / ".env"
 _TOKEN_PATH = Path(__file__).parent.parent / ".auth_token.json"
 
-ALLOWED_DOMAIN  = "clearlyrated.com"
+ALLOWED_DOMAIN  = os.getenv("ALLOWED_DOMAIN", "").strip()
 GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 SCOPES          = "openid email profile"
@@ -266,7 +266,7 @@ def login_page():
                 </a>
             </div>
             <div style="text-align:center; margin-top:20px; color:#929292; font-size:0.82rem;">
-                Access restricted to <strong>@clearlyrated.com</strong> accounts
+                Access restricted to authorized company accounts
             </div>
             """,
             unsafe_allow_html=True,

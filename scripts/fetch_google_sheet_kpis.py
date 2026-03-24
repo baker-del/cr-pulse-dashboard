@@ -10,12 +10,16 @@ To find the sheet GID: open the sheet, look at the URL after "gid="
 """
 
 import io
+import os
 import sys
 from datetime import date, datetime
 from pathlib import Path
 
 import pandas as pd
 import requests
+from dotenv import load_dotenv
+
+load_dotenv(Path(__file__).parent.parent / ".env")
 
 # Add parent to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -26,7 +30,7 @@ from utils.kpi_calculator import calculate_variance, is_inverse_kpi
 
 # ── Configuration ──────────────────────────────────────────────────────────────
 
-SPREADSHEET_ID = "1WctcSLELDztlPwZST3oZuweIKC6lI_j8YjOttufbs90"
+SPREADSHEET_ID = os.getenv("KPI_SPREADSHEET_ID", "").strip()
 SHEET_TAB_NAME = "KPI"   # Name of the tab inside the spreadsheet
 SHEET_GID      = 0       # Tab GID (find in URL after "gid="). 0 = first tab.
 
