@@ -28,12 +28,14 @@ PRIORITY_GROUPS = {
     "p2": {
         "label": "2️⃣ One Agentic CX Platform",
         "kpis": [
-            'Total Surveys Sent',
+            'CR - Total Surveys Sent',
+            'CFT - Total Surveys Sent',
             'CRS - Monthly Active Users',
             'CFT - Monthly Active Users',
             'Core Product Adoption (Workflow Penetration)',
             '30-day Response Rate (Overall)',
-            '30-day Response Rate excluding Express',
+            'CR - Last 30 days RR excluding Express',
+            'CFT - 7-day Median Email Response Rate',
             'Tickets Resolved in Tier 1 within SLA',
             'Tickets out of SLA',
             'Tickets Created (Week)',
@@ -154,6 +156,9 @@ SUB_KPIS = {
     'Win Rate (AEC)',
     'ACV (SAL)',
     'ACV (AEC)',
+    'CFT - Total Surveys Sent',
+    'CFT - 7-day Median Email Response Rate',
+    'CR - Last 30 days RR excluding Express',
 }
 
 

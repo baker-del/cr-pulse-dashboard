@@ -222,6 +222,44 @@ if 'last_renewal_sync' in st.session_state:
 
 st.markdown("---")
 
+# Product KPI Sheet Sync
+st.subheader("📦 Product KPI Sheet Sync")
+
+st.markdown("""
+**KPIs pulled from Product KPIs 2026 sheet:**
+- CFT - Monthly Active Users
+- CFT - Total Surveys Sent
+- CFT - 7-day Median Email Response Rate
+- CRS - Monthly Active Users
+- CR - Total Surveys Sent
+- CR - Last 30 days RR excluding Express
+""")
+
+if st.button("📦 Sync Product KPIs Now", disabled=not creds_exist):
+    try:
+        import subprocess
+        product_script = Path(__file__).parent.parent / "scripts" / "fetch_product_kpis.py"
+        with st.spinner("Fetching from Product KPI sheet…"):
+            result = subprocess.run(
+                ["python3", str(product_script), quarter_gs, str(year_gs)],
+                capture_output=True, text=True,
+                cwd=str(Path(__file__).parent.parent),
+            )
+        if result.returncode == 0:
+            st.success("✅ Product KPI sync complete!")
+            st.text(result.stdout)
+            st.session_state.last_product_sync = datetime.now().strftime("%b %d, %Y %I:%M %p")
+        else:
+            st.error("Sync failed:")
+            st.code(result.stderr)
+    except Exception as e:
+        st.error(f"Error: {e}")
+
+if 'last_product_sync' in st.session_state:
+    st.caption(f"Last synced: {st.session_state.last_product_sync}")
+
+st.markdown("---")
+
 # Data Export
 st.subheader("📥 Data Export")
 
