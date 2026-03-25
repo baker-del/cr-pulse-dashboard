@@ -80,6 +80,7 @@ PROJECTS = [
             {"label": "ClearlyReferred Proposal", "url": "https://docs.google.com/document/d/17S82EK63yvu1fC__M5A7l8-4CpsdmufvYZO7BAvZ4RA/edit"},
             {"label": "CX Bootcamp ROI Analysis", "url": "https://docs.google.com/document/d/1D56wntEyJ0uQedupWtKgfKFqkvDMYa6-9bv-G3Lbz1w/edit"},
             {"label": "SAL Winrate Analysis", "url": "https://docs.google.com/document/d/1W1V98mV60higwSsOrZd7fzHqVwg8qlpMerjPQabrMDk/edit"},
+            {"label": "AEC Winrate Analysis", "url": "https://docs.google.com/document/d/1m0DlU-gzvDeW3rq1WYzz2DR4R8Uj5-i118NDckjuo9A/edit"},
         ],
     },
     {
