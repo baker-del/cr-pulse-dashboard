@@ -116,6 +116,7 @@ pg = st.navigation(
         st.Page("app_home.py",                       title="CR Pulse",     default=True),
         st.Page("pages/1_📊_Dashboard.py",            title="Dashboard"),
         st.Page("pages/2_📁_Strategic_Initiatives.py", title="Strategic Initiatives"),
+        st.Page("pages/3_📈_SM_Efficiency.py",         title="S&M Efficiency"),
         st.Page("pages/4_⚙️_Settings.py",             title="Settings"),
     ],
     position="sidebar",
