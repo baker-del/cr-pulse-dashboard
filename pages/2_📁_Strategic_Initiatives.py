@@ -77,7 +77,7 @@ PROJECTS = [
             {"item": "Lever 3: SAL multi-threading requirement live", "due": "2026-04-30", "owner": "Pete"},
         ],
         "docs": [
-            {"label": "📈 S&M Efficiency Dashboard", "url": "https://cr-pulse.streamlit.app/S&M_Efficiency"},
+            {"label": "📈 S&M Efficiency Dashboard", "url": "https://cr-pulse.streamlit.app/SM_Efficiency"},
             {"label": "S&M Efficiency Plan", "url": "https://docs.google.com/document/d/1ji-Z0hPMJiIds-MuWaK_pMwJczu9qD1coLT0EqDPvrE/edit"},
             {"label": "SAL Winrate Analysis", "url": "https://docs.google.com/document/d/1W1V98mV60higwSsOrZd7fzHqVwg8qlpMerjPQabrMDk/edit"},
             {"label": "AEC Winrate Analysis", "url": "https://docs.google.com/document/d/1m0DlU-gzvDeW3rq1WYzz2DR4R8Uj5-i118NDckjuo9A/edit"},
