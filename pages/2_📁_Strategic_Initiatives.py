@@ -6,6 +6,7 @@ Data sourced from AI Assistant project files.
 
 import streamlit as st
 from datetime import date, datetime
+from database.db import get_db
 
 # ── Initiative data ───────────────────────────────────────────────────────────
 # Each initiative is a dict loaded from AI Assistant memory/project files.
@@ -55,33 +56,34 @@ PROJECTS = [
     },
     {
         "name": "S&M Efficiency",
-        "tagline": "Improve S&M efficiency from 51% (2025) to 65% by end of 2026",
-        "owner": "Pete / Stephen / Baker",
-        "status": "At Risk",
-        "phase": "Execution — Q1 action items",
+        "tagline": "From 0.57x to 0.65x — Three-lever framework (MQL Quality, MQL→SQL, Win Rate)",
+        "owner": "Baker / Pete / Stephen",
+        "status": "_derive_from_dashboard",
+        "phase": "Q2 execution — all three levers analyzed, actions starting April W1",
         "updates": [
-            "Goal: 51% → 65% S&M efficiency ratio — key dependency for $250K+ cash EBITDA target",
-            "Mar 20 items due: ICP enforcement, paid search, MQL scoring (Freddy/Stephen/Pete)",
-            "Mar 27 items due: BDR inbound process, partnership pipeline, referral program (Shannon/Pete/Stephen/Baker)",
-            "ClearlyReferred referral program proposal complete — ready for leadership review",
-            "Apr 30: SAL enablement program due (Pete/Stephen)",
+            "Three-lever framework in place: MQL Quality (Lever 1), MQL→SQL (Lever 2), Win Rate (Lever 3)",
+            "Lever 3 (Win Rate): Action plans accepted by Pete — SAL 4%→20%, AEC 18%→25%. Execution starts April W1.",
+            "Lever 2 (MQL→SQL): Analysis complete — 13% end-to-end, two different BDR problems identified. Actions under review.",
+            "Lever 1 (MQL Cost): ICP enforcement live. Non-ICP MQLs turned off. Paid paused. ABM narrowed to 500 AEC + 100 Acct.",
+            "Demand gen spend cuts: LinkedIn/Meta near zero. Google max $10K. ABM paused except D.C. Bootcamp.",
         ],
         "due_next_30": [
-            {"item": "ICP enforcement across non-ABM channels at MQL level", "due": "2026-03-20", "owner": "Freddy / Stephen"},
-            {"item": "Paid search — industry-specific terms", "due": "2026-03-20", "owner": "Freddy / Stephen"},
-            {"item": "MQL scoring model update", "due": "2026-03-20", "owner": "Freddy / Stephen / Pete"},
-            {"item": "BDR inbound process for non-ICP leads", "due": "2026-03-27", "owner": "Shannon / Pete"},
-            {"item": "Partnership referral pipeline (WPG model)", "due": "2026-03-27", "owner": "Pete / Shannon"},
-            {"item": "ClearlyReferred program launch", "due": "2026-04-01", "owner": "Stephen / Baker"},
-            {"item": "SAL enablement program", "due": "2026-04-30", "owner": "Pete / Stephen"},
+            {"item": "Lever 3: SAL discovery-first mandate + coach assigned", "due": "2026-04-01", "owner": "Pete"},
+            {"item": "Lever 3: AEC SE deals transferred to AEs", "due": "2026-04-01", "owner": "Pete"},
+            {"item": "Lever 2: Align on MQL→SQL action items", "due": "2026-04-01", "owner": "Baker / Shannon"},
+            {"item": "Lever 1: MQL spend analysis with Finance", "due": "2026-04-04", "owner": "Stephen / Andrew"},
+            {"item": "Lever 3: SAL 20-touch cadence sequences rebuilt", "due": "2026-04-15", "owner": "Pete / AE"},
+            {"item": "Lever 2: 7-day discovery SLA implemented", "due": "2026-04-15", "owner": "Pete / Shannon"},
+            {"item": "Lever 3: SAL multi-threading requirement live", "due": "2026-04-30", "owner": "Pete"},
         ],
         "docs": [
+            {"label": "📈 S&M Efficiency Dashboard", "url": "/S&M_Efficiency"},
             {"label": "S&M Efficiency Plan", "url": "https://docs.google.com/document/d/1ji-Z0hPMJiIds-MuWaK_pMwJczu9qD1coLT0EqDPvrE/edit"},
-            {"label": "ClearlyReferred Proposal", "url": "https://docs.google.com/document/d/17S82EK63yvu1fC__M5A7l8-4CpsdmufvYZO7BAvZ4RA/edit"},
-            {"label": "CX Bootcamp ROI Analysis", "url": "https://docs.google.com/document/d/1D56wntEyJ0uQedupWtKgfKFqkvDMYa6-9bv-G3Lbz1w/edit"},
             {"label": "SAL Winrate Analysis", "url": "https://docs.google.com/document/d/1W1V98mV60higwSsOrZd7fzHqVwg8qlpMerjPQabrMDk/edit"},
             {"label": "AEC Winrate Analysis", "url": "https://docs.google.com/document/d/1m0DlU-gzvDeW3rq1WYzz2DR4R8Uj5-i118NDckjuo9A/edit"},
             {"label": "MQL→SQL Analysis", "url": "https://docs.google.com/document/d/1KcxW6ymZK57dk3pQ6HMBSjbsSDe8hkJ5tfRmqFYTN1E/edit"},
+            {"label": "CX Bootcamp ROI", "url": "https://docs.google.com/document/d/1D56wntEyJ0uQedupWtKgfKFqkvDMYa6-9bv-G3Lbz1w/edit"},
+            {"label": "ClearlyReferred Proposal", "url": "https://docs.google.com/document/d/17S82EK63yvu1fC__M5A7l8-4CpsdmufvYZO7BAvZ4RA/edit"},
         ],
     },
     {
@@ -148,9 +150,44 @@ STATUS_COLORS = {
 }
 
 
+def _derive_sm_status():
+    """Derive S&M Efficiency status from the S&M dashboard KPIs."""
+    try:
+        db = get_db()
+        quarter = st.session_state.get('current_quarter', 'Q2')
+        year = st.session_state.get('current_year', 2026)
+        kpis = db.get_latest_kpis(quarter, year)
+        if kpis.empty:
+            return "Behind"  # No data = behind
+
+        sm_kpis = kpis[kpis['kpi_name'].str.startswith('SM_')]
+        if sm_kpis.empty:
+            return "Behind"
+
+        # Count statuses
+        statuses = sm_kpis['status'].dropna().tolist()
+        behind = sum(1 for s in statuses if s == 'Behind')
+        at_risk = sum(1 for s in statuses if s == 'At Risk')
+        on_track = sum(1 for s in statuses if s == 'On Track')
+
+        if behind > len(statuses) * 0.3:
+            return "Behind"
+        elif at_risk + behind > len(statuses) * 0.3:
+            return "At Risk"
+        elif on_track > 0:
+            return "On Track"
+        return "Behind"
+    except Exception:
+        return "Behind"
+
+
 def render_project_card(project):
     """Render a single project card."""
-    bg, text_color, border_hex = STATUS_COLORS.get(project["status"], ("#f5f5f5", "#333", "999"))
+    status = project["status"]
+    if status == "_derive_from_dashboard":
+        status = _derive_sm_status()
+
+    bg, text_color, border_hex = STATUS_COLORS.get(status, ("#f5f5f5", "#333", "999"))
 
     # Card container
     st.markdown(
@@ -159,7 +196,7 @@ def render_project_card(project):
         f'<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">'
         f'<span style="font-size:1.15rem; font-weight:700; color:#1A3C6E;">{project["name"]}</span>'
         f'<span style="background:{bg}; color:{text_color}; padding:3px 12px; border-radius:12px; '
-        f'font-size:0.78rem; font-weight:600;">{project["status"]}</span>'
+        f'font-size:0.78rem; font-weight:600;">{status}</span>'
         f'</div>'
         f'<div style="font-size:0.85rem; color:#666; margin-bottom:4px;">{project["tagline"]}</div>'
         f'<div style="font-size:0.8rem; color:#888;">Owner: {project["owner"]} &nbsp;|&nbsp; Phase: {project["phase"]}</div>'
