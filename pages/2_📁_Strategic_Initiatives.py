@@ -56,7 +56,7 @@ PROJECTS = [
     },
     {
         "name": "S&M Efficiency",
-        "tagline": "From 0.57x to 0.65x — Three-lever framework (MQL Quality, MQL→SQL, Win Rate)",
+        "tagline": "From 0.23x to 0.65x — Three-lever framework (MQL Quality, MQL→SQL, Win Rate)",
         "owner": "Baker / Pete / Stephen",
         "status": "_derive_from_dashboard",
         "phase": "Q2 execution — all three levers analyzed, actions starting April W1",
