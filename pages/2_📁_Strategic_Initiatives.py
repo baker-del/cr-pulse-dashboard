@@ -5,6 +5,8 @@ Data sourced from AI Assistant project files.
 """
 
 import streamlit as st
+import pandas as pd
+import os
 from datetime import date, datetime
 from database.db import get_db
 
@@ -132,10 +134,31 @@ PROJECTS = [
         ],
         "docs": [
             {"label": "Prototype Q2 Shortlist (Confluence)", "url": "https://clearlyrated.atlassian.net/wiki/spaces/PT/pages/2897084422/Prism+Prototype+Ideas+Q2+Shortlist"},
+            {"label": "The AI Advantage Brief", "url": "#", "local": "Desktop/AI_Advantage_Podcast_OnePager.pdf"},
             {"label": "PRISM Initiative Folder", "url": "#", "local": "AI Assistant/projects/prism/"},
             {"label": "Roadmap Tracker (Q1 & Q2)", "url": "https://clearlyrated.atlassian.net/jira/dashboards/12108"},
             {"label": "Story & Defect Dashboard", "url": "https://clearlyrated.atlassian.net/jira/dashboards/12075"},
             {"label": "Epic Planning Board", "url": "https://clearlyrated.atlassian.net/jira/dashboards/12042"},
+        ],
+    },
+    {
+        "name": "Moonshot",
+        "tagline": "Find best exit value for investors — strategic acquirer & PE targeting",
+        "owner": "Baker",
+        "status": "On Track",
+        "phase": "Research & target identification — no timeline set",
+        "updates": [
+            "47 strategic targets identified across AEC Platform, Prof Services Tech, and PE categories",
+            "11 high-priority targets ranked: Roper/Deltek #1, Intapp #2, Thomson Reuters #3, Unanet #4",
+            "5 detailed investor profiles completed (Thomson Reuters, Intapp, Deltek, Unanet, Avionte)",
+            "PRISM launch (July 2026) is the key value inflection point for most acquirer conversations",
+            "No active outreach timeline — building intelligence foundation first",
+        ],
+        "due_next_30": [],
+        "docs": [
+            {"label": "Strategic Target List (XLS)", "url": "https://drive.google.com/file/d/1bO1T3vYCpN4JiaMSuSBux5ZkLRieiuEu/view"},
+            {"label": "Investor Profiles Folder", "url": "https://drive.google.com/drive/folders/1m2tLl3cWI1RPgZBYR8M32fHOQLURLCH2"},
+            {"label": "Moonshot Drive Folder", "url": "https://drive.google.com/drive/folders/1_aFFPut4xXIbV92g5EcbJoPtb1MASD2r"},
         ],
     },
 ]
@@ -307,3 +330,103 @@ if all_overdue:
 # Render project cards
 for project in PROJECTS:
     render_project_card(project)
+
+# ── Moonshot Deep Dive ───────────────────────────────────────────────────────
+st.markdown("---")
+st.markdown("## Moonshot — Strategic Target List & Investor Profiles")
+
+# Load the XLS target list
+MOONSHOT_XLS = os.path.join(os.path.dirname(os.path.dirname(__file__)), "assets", "moonshot", "ClearlyRated-Strategic-Target-List-Updated.xlsx")
+if os.path.exists(MOONSHOT_XLS):
+    df = pd.read_excel(MOONSHOT_XLS)
+
+    # Summary metrics
+    m1, m2, m3, m4 = st.columns(4)
+    m1.metric("Total Targets", len(df))
+    m2.metric("High Priority", len(df[df['Priority'].str.contains('High', na=False)]))
+    m3.metric("Medium Priority", len(df[df['Priority'].str.contains('Medium', na=False)]))
+    m4.metric("Lower Priority", len(df[df['Priority'].str.contains('Lower', na=False)]))
+
+    # Filter controls
+    priority_filter = st.selectbox("Filter by Priority", ["All", "High", "Medium", "Lower"])
+    if priority_filter != "All":
+        df_filtered = df[df['Priority'].str.contains(priority_filter, na=False)]
+    else:
+        df_filtered = df
+
+    # Display table
+    display_cols = ['Company', 'Category', 'Priority', 'Est. Revenue / AUM', 'Key Contact', 'Title', 'Strategic Notes']
+    st.dataframe(
+        df_filtered[display_cols].reset_index(drop=True),
+        use_container_width=True,
+        height=400,
+    )
+
+    # Top 5 Investor Profile Cards
+    st.markdown("### Top 5 Target Profiles")
+
+    TOP_5_PROFILES = [
+        {
+            "rank": "#1",
+            "company": "Roper Technologies / Deltek",
+            "category": "AEC Platform (Parent)",
+            "revenue": "$6.8B revenue / ~$55B mkt cap",
+            "ceo": "Neil Hunn (Roper) / Bob Hughes (Deltek)",
+            "thesis": "Owner of Deltek — ClearlyRated's deepest AEC integration. 30K global customers, 97% renewal rate. PRISM as AI CX layer for Deltek ecosystem. Roper's stock down 38% from peak — under pressure to show AI thesis.",
+            "approach": "Warm up via Deltek partnership team Q2 2026. Don't approach Deltek without Roper's blessing.",
+        },
+        {
+            "rank": "#2",
+            "company": "Intapp",
+            "category": "Professional Services Tech",
+            "revenue": "$420M ARR (NASDAQ: INTA, ~$1.8B mkt cap)",
+            "ceo": "John Hall (since 2007)",
+            "thesis": "Serves exact same 4 verticals: legal, accounting, AEC, consulting. 2,750+ firms. 120%+ cloud NRR. AI platform (Celeste) with Anthropic Claude integration. PRISM fills a CX gap they'd otherwise build.",
+            "approach": "Reach out Q2 2026 pre-PRISM. Frame as 'the CX intelligence layer for your 4 verticals.'",
+        },
+        {
+            "rank": "#3",
+            "company": "Thomson Reuters",
+            "category": "Professional Services Tech",
+            "revenue": "$9.2B revenue (NYSE: TRI)",
+            "ceo": "Steve Hasker",
+            "thesis": "$11B committed through 2028 for M&A, $6.8B deployed. 'Change the Professions' strategy = vertical AI platforms. $600M+ annual AI investment. CoCounsel at 1M users. Key risk: OpenAI/Perplexity commoditizing legal AI.",
+            "approach": "Warm approach via TR Ventures or Reuters Events connections. Timing: post-PRISM launch Aug-Sep 2026.",
+        },
+        {
+            "rank": "#4",
+            "company": "Unanet",
+            "category": "AEC Platform",
+            "revenue": "~$115-160M ARR (PE-backed: JMI Equity + Onex)",
+            "ceo": "Craig Halliday (since Sep 2019)",
+            "thesis": "Direct integration partner, AEC-focused ERP. 4,200+ GovCon/AEC customers. ~110-120% NRR. Champ AI expansion + GrowthStudio downmarket play. ClearlyRated's $28K ACV AEC customers are already Unanet customers.",
+            "approach": "Closest integration, most natural tuck-in. Approach directly or via Accel-KKR. Same customer base = no integration risk.",
+        },
+        {
+            "rank": "#5",
+            "company": "Avionte",
+            "category": "Staffing Platform",
+            "revenue": "~$41M revenue (Serent Capital-backed)",
+            "ceo": "John Long (founder/operator)",
+            "thesis": "900+ staffing agencies on unified ATS/CRM/payroll/VMS stack. Mid-market staffing agencies (<$50M) prefer Avionte's native stack over Salesforce. Lacks client feedback/performance analytics — the core gap PRISM fills.",
+            "approach": "Strategic fit as acquisition target or deep partner. Staffing vertical alignment is strong.",
+        },
+    ]
+
+    for profile in TOP_5_PROFILES:
+        st.markdown(
+            f'<div style="border:1px solid #1A3C6E; border-left:5px solid #1A3C6E; '
+            f'border-radius:6px; padding:14px 18px; margin-bottom:12px; background:#f8fafc;">'
+            f'<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">'
+            f'<span style="font-size:1.05rem; font-weight:700; color:#1A3C6E;">{profile["rank"]} {profile["company"]}</span>'
+            f'<span style="background:#e6f4ea; color:#1a7a2e; padding:2px 10px; border-radius:10px; '
+            f'font-size:0.75rem; font-weight:600;">{profile["category"]}</span>'
+            f'</div>'
+            f'<div style="font-size:0.82rem; color:#555; margin-bottom:2px;"><b>Revenue:</b> {profile["revenue"]} &nbsp;|&nbsp; <b>CEO:</b> {profile["ceo"]}</div>'
+            f'<div style="font-size:0.82rem; color:#333; margin-top:6px;"><b>Thesis:</b> {profile["thesis"]}</div>'
+            f'<div style="font-size:0.82rem; color:#1A3C6E; margin-top:4px;"><b>Approach:</b> {profile["approach"]}</div>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+else:
+    st.warning("Strategic target list not found. Run data sync to download from Google Drive.")
