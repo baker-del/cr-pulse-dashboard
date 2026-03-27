@@ -251,12 +251,21 @@ def process_hubspot_deals(deals_data, quarter="Q1", year=2026):
     sal_amounts = []
     aec_amounts = []
 
+    # Exclude known test deals
+    EXCLUDED_DEALS = {
+        'affiliated engineers - as testing',
+    }
+
     for deal in deals_data:
         props = deal['properties']
 
         dealstage  = props.get('dealstage', '')
         pipeline   = props.get('pipeline', '')
         dealname   = props.get('dealname', '')
+
+        # Skip test deals
+        if dealname.lower().strip() in EXCLUDED_DEALS:
+            continue
         amount     = float(props.get('amount', 0) or 0)
         dealtype   = props.get('dealtype', '').lower()
 
