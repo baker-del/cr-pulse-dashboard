@@ -343,27 +343,48 @@ MOONSHOT_XLS = os.path.join(os.path.dirname(os.path.dirname(__file__)), "assets"
 if os.path.exists(MOONSHOT_XLS):
     df = pd.read_excel(MOONSHOT_XLS)
 
+    # Key documents
+    st.markdown(
+        '<div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:16px;">'
+        '<a href="assets/moonshot/Deltek-Investor-Profile-2026.pdf" style="background:#1A3C6E; color:white; padding:6px 14px; border-radius:4px; text-decoration:none; font-size:0.82rem;">📄 Deltek Profile</a>'
+        '<a href="assets/moonshot/Intapp-Investor-Profile-2026.pdf" style="background:#1A3C6E; color:white; padding:6px 14px; border-radius:4px; text-decoration:none; font-size:0.82rem;">📄 Intapp Profile</a>'
+        '<a href="assets/moonshot/Thomson-Reuters-Investor-Profile-2026.pdf" style="background:#1A3C6E; color:white; padding:6px 14px; border-radius:4px; text-decoration:none; font-size:0.82rem;">📄 Thomson Reuters Profile</a>'
+        '<a href="assets/moonshot/Unanet-Investor-Profile-2026.pdf" style="background:#1A3C6E; color:white; padding:6px 14px; border-radius:4px; text-decoration:none; font-size:0.82rem;">📄 Unanet Profile</a>'
+        '<a href="assets/moonshot/Avionte-Investor-Profile-2026.pdf" style="background:#1A3C6E; color:white; padding:6px 14px; border-radius:4px; text-decoration:none; font-size:0.82rem;">📄 Avionte Profile</a>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+
+    # Show only High Priority by default
+    df_high = df[df['Priority'].str.contains('High', na=False)]
+
     # Summary metrics
-    m1, m2, m3, m4 = st.columns(4)
-    m1.metric("Total Targets", len(df))
-    m2.metric("High Priority", len(df[df['Priority'].str.contains('High', na=False)]))
-    m3.metric("Medium Priority", len(df[df['Priority'].str.contains('Medium', na=False)]))
-    m4.metric("Lower Priority", len(df[df['Priority'].str.contains('Lower', na=False)]))
+    m1, m2, m3 = st.columns(3)
+    m1.metric("High Priority Targets", len(df_high))
+    m2.metric("Strategic Acquirers", len(df_high[df_high['Category'].str.contains('Platform|Tech|Staffing', na=False)]))
+    m3.metric("PE / Financial", len(df_high[df_high['Category'].str.contains('PE|Holding', na=False)]))
 
-    # Filter controls
-    priority_filter = st.selectbox("Filter by Priority", ["All", "High", "Medium", "Lower"])
-    if priority_filter != "All":
-        df_filtered = df[df['Priority'].str.contains(priority_filter, na=False)]
-    else:
-        df_filtered = df
-
-    # Display table
-    display_cols = ['Company', 'Category', 'Priority', 'Est. Revenue / AUM', 'Key Contact', 'Title', 'Strategic Notes']
+    # Display high priority table
+    display_cols = ['Company', 'Category', 'Est. Revenue / AUM', 'Key Contact', 'Title', 'Strategic Notes']
     st.dataframe(
-        df_filtered[display_cols].reset_index(drop=True),
+        df_high[display_cols].reset_index(drop=True),
         use_container_width=True,
         height=400,
     )
+
+    # Expandable: show full list
+    with st.expander("View all 47 targets (Medium + Lower priority)"):
+        priority_filter = st.selectbox("Filter", ["All", "Medium", "Lower"])
+        if priority_filter != "All":
+            df_rest = df[df['Priority'].str.contains(priority_filter, na=False)]
+        else:
+            df_rest = df[~df['Priority'].str.contains('High', na=False)]
+        display_cols_full = ['Company', 'Category', 'Priority', 'Est. Revenue / AUM', 'Key Contact', 'Title', 'Strategic Notes']
+        st.dataframe(
+            df_rest[display_cols_full].reset_index(drop=True),
+            use_container_width=True,
+            height=300,
+        )
 
     # Top 5 Investor Profile Cards
     st.markdown("### Top 5 Target Profiles")
