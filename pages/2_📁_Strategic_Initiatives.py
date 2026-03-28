@@ -31,16 +31,17 @@ def days_until(d_str):
 PROJECTS = [
     {
         "name": "Wayfinder",
-        "tagline": "Validate journey-based CX with staffing customers",
-        "owner": "Baker / Hina",
-        "status": "Behind",
-        "phase": "Customer Validation (Part 1) — good learnings",
+        "tagline": "Path to 100% NRR — journey CX expansion in staffing",
+        "owner": "Baker / Eric / Hina",
+        "status": "On Track",
+        "phase": "Q2 seeding — CX assessments + ROI calculator before Q3 renewals",
         "updates": [
-            "Phase 2 outreach complete — 11 staffing + 4 accounting firms interested in CX assessments",
-            "Meeting scheduling in progress — many CX assessments already on calendar for next 3 weeks",
-            "5 customer calls completed (Medicus GREEN, LocumTenens YELLOW, Procom YELLOW, Tempositions YELLOW, J. Kent RED)",
-            "Key learning: majority land YELLOW — interest is real but change management blocks conversion",
-            "Emerging ICP: mid-market+ firms with CX champion role and multi-touchpoint journeys",
+            "Board doc complete: CX maturity segmentation, competitive intel, path to 100% NRR",
+            "228 staffing customers segmented: 126 Reputation-Driven ($1.02M), 102 Measurement-Driven ($2.69M)",
+            "7 CX assessments done: 1 GREEN (Medicus pilot live), 5 YELLOW, 1 RED",
+            "Competitive intel: 19 Qualtrics accounts ($783K ARR), 42 total overlap accounts mapped",
+            "NRR path: 98.7% by Q1 2027, 100%+ by Q2 2027. Needs ROI calculator before July.",
+            "Expansion opportunity: $5.6M addressable wallet gap (ex-Qualtrics), 25% capture = $1.4M",
         ],
         "due_next_30": [
             {"item": "Medicus pilot results review — first survey responses", "due": "2026-04-10", "owner": "Hina / Hunter"},
@@ -50,6 +51,8 @@ PROJECTS = [
             {"item": "Schedule remaining CX assessments (11 staffing + 4 accounting)", "due": "2026-04-15", "owner": "Hina / Zach"},
         ],
         "docs": [
+            {"label": "📊 Learnings & Recommendations (Board)", "url": "https://docs.google.com/document/d/1mYErZVWgPM5MiAKGwKVAvebD9tWW3g2a_5oE3Cm7iBg/edit"},
+            {"label": "📋 Competitive Intelligence Tracker", "url": "https://docs.google.com/spreadsheets/d/1j9_FRuowvXyDfipfGDT3zJKpwM-hjvClGVit3rJlUbs/edit"},
             {"label": "Tracking Sheet", "url": "https://docs.google.com/spreadsheets/d/1s24NhCYPPQ_EA-qSnGWtUXQIzdVDVHKUk-ZqZ3xXS00/edit"},
             {"label": "Hypothesis Doc", "url": "https://docs.google.com/document/d/1kfKHrtCbohJt7KFWUsjm9AfE2qCaQ3Dx2EoAI9MAcEc/edit"},
             {"label": "Call Learnings", "url": "https://docs.google.com/document/d/1Gkg1aQgafkhimfvFnMRiKlXeRYTNkaKoqtJ2KnP9ko4/edit"},
