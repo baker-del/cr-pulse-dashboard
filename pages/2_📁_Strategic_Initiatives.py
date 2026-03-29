@@ -5,8 +5,6 @@ Data sourced from AI Assistant project files.
 """
 
 import streamlit as st
-import pandas as pd
-import os
 from datetime import date, datetime
 from database.db import get_db
 
@@ -95,21 +93,20 @@ PROJECTS = [
         "name": "Profitability",
         "tagline": "Hit $250K+ cash EBITDA by end of 2026",
         "owner": "Baker / Andrew",
-        "status": "Behind",
-        "phase": "Phase 1 executing (Apr 1 deadline), Phase 2 planning",
+        "status": "On Track",
+        "phase": "Phase 1 executing (Apr 1 deadline), Phase 2 in progress",
         "updates": [
-            "Behind — dependent on S&M efficiency plan and Portland sublease to hit target",
+            "Back on track — marketing budget reduction and R&D resource/budget plan both agreed",
             "Colby Kennedy (Product Marketing Lead) last day 2026-04-01",
-            "Marketing discretionary budget review this week",
-            "Portland sublease — broker selected, engagement signed. No target date yet.",
-            "Engineering plan and budget review due 2026-04-01",
+            "Marketing discretionary budget reduction — agreed",
+            "R&D new resource and budget plan — agreed",
+            "Portland sublease — not started. Broker engaged but no active pursuit yet.",
             "New ERP rollout week of 2026-04-01, on track",
         ],
         "due_next_30": [
-            {"item": "Engineering plan and budget review", "due": "2026-04-01", "owner": "Baker / Jorgen"},
             {"item": "Colby Kennedy (Product Marketing Lead) last day", "due": "2026-04-01", "owner": "Stephen"},
             {"item": "New ERP rollout", "due": "2026-04-01", "owner": "Andrew"},
-            {"item": "Portland sublease — set target date with broker", "due": "2026-04-15", "owner": "Andrew"},
+            {"item": "Portland sublease — start active pursuit", "due": "2026-04-15", "owner": "Andrew"},
             {"item": "Vendor/spend review kickoff", "due": "2026-04-15", "owner": "Andrew"},
         ],
         "docs": [
@@ -162,6 +159,11 @@ PROJECTS = [
             {"label": "Strategic Target List (XLS)", "url": "https://drive.google.com/file/d/1bO1T3vYCpN4JiaMSuSBux5ZkLRieiuEu/view"},
             {"label": "Investor Profiles Folder", "url": "https://drive.google.com/drive/folders/1m2tLl3cWI1RPgZBYR8M32fHOQLURLCH2"},
             {"label": "Moonshot Drive Folder", "url": "https://drive.google.com/drive/folders/1_aFFPut4xXIbV92g5EcbJoPtb1MASD2r"},
+            {"label": "Deltek Profile", "url": "https://drive.google.com/file/d/1TKs8mtWaKKhWaSs1fe2Br9LSmshp5EtP/view"},
+            {"label": "Intapp Profile", "url": "https://drive.google.com/file/d/1gXCXToRA3aCBd5ZAzXZzcbNRn4Nh7LTc/view"},
+            {"label": "Thomson Reuters Profile", "url": "https://drive.google.com/file/d/1bEuMjQ2qZ1v82HF-ReSgHRUMCXBabQQG/view"},
+            {"label": "Unanet Profile", "url": "https://drive.google.com/file/d/1twwQd6otdP8NayEx65_2XHv05nd8Wkic/view"},
+            {"label": "Avionte Profile", "url": "https://drive.google.com/file/d/1bpKCSZcw76rEe6ytmfBc-KvWzfmlUMR0/view"},
         ],
     },
 ]
@@ -334,124 +336,3 @@ if all_overdue:
 for project in PROJECTS:
     render_project_card(project)
 
-# ── Moonshot Deep Dive ───────────────────────────────────────────────────────
-st.markdown("---")
-st.markdown("## Moonshot — Strategic Target List & Investor Profiles")
-
-# Load the XLS target list
-MOONSHOT_XLS = os.path.join(os.path.dirname(os.path.dirname(__file__)), "assets", "moonshot", "ClearlyRated-Strategic-Target-List-Updated.xlsx")
-if os.path.exists(MOONSHOT_XLS):
-    df = pd.read_excel(MOONSHOT_XLS)
-
-    # Key documents — same link style as project cards
-    moonshot_docs = " &nbsp;|&nbsp; ".join([
-        '<a href="https://drive.google.com/file/d/1TKs8mtWaKKhWaSs1fe2Br9LSmshp5EtP/view" target="_blank" style="font-size:0.8rem; color:#1A3C6E;">📄 Deltek Profile</a>',
-        '<a href="https://drive.google.com/file/d/1gXCXToRA3aCBd5ZAzXZzcbNRn4Nh7LTc/view" target="_blank" style="font-size:0.8rem; color:#1A3C6E;">📄 Intapp Profile</a>',
-        '<a href="https://drive.google.com/file/d/1bEuMjQ2qZ1v82HF-ReSgHRUMCXBabQQG/view" target="_blank" style="font-size:0.8rem; color:#1A3C6E;">📄 Thomson Reuters Profile</a>',
-        '<a href="https://drive.google.com/file/d/1twwQd6otdP8NayEx65_2XHv05nd8Wkic/view" target="_blank" style="font-size:0.8rem; color:#1A3C6E;">📄 Unanet Profile</a>',
-        '<a href="https://drive.google.com/file/d/1bpKCSZcw76rEe6ytmfBc-KvWzfmlUMR0/view" target="_blank" style="font-size:0.8rem; color:#1A3C6E;">📄 Avionte Profile</a>',
-    ])
-    st.markdown(
-        f'<div style="margin-bottom:12px; padding:8px 0; border-bottom:1px solid #eee;">{moonshot_docs}</div>',
-        unsafe_allow_html=True,
-    )
-
-    # Show only High Priority by default
-    df_high = df[df['Priority'].str.contains('High', na=False)]
-
-    # Summary metrics
-    m1, m2, m3 = st.columns(3)
-    m1.metric("High Priority Targets", len(df_high))
-    m2.metric("Strategic Acquirers", len(df_high[df_high['Category'].str.contains('Platform|Tech|Staffing', na=False)]))
-    m3.metric("PE / Financial", len(df_high[df_high['Category'].str.contains('PE|Holding', na=False)]))
-
-    # Display high priority table
-    display_cols = ['Company', 'Category', 'Est. Revenue / AUM', 'Key Contact', 'Title', 'Strategic Notes']
-    st.dataframe(
-        df_high[display_cols].reset_index(drop=True),
-        use_container_width=True,
-        height=400,
-    )
-
-    # Expandable: show full list
-    with st.expander("View all 47 targets (Medium + Lower priority)"):
-        priority_filter = st.selectbox("Filter", ["All", "Medium", "Lower"])
-        if priority_filter != "All":
-            df_rest = df[df['Priority'].str.contains(priority_filter, na=False)]
-        else:
-            df_rest = df[~df['Priority'].str.contains('High', na=False)]
-        display_cols_full = ['Company', 'Category', 'Priority', 'Est. Revenue / AUM', 'Key Contact', 'Title', 'Strategic Notes']
-        st.dataframe(
-            df_rest[display_cols_full].reset_index(drop=True),
-            use_container_width=True,
-            height=300,
-        )
-
-    # Top 5 Investor Profile Cards
-    st.markdown("### Top 5 Target Profiles")
-
-    TOP_5_PROFILES = [
-        {
-            "rank": "#1",
-            "company": "Roper Technologies / Deltek",
-            "category": "AEC Platform (Parent)",
-            "revenue": "$6.8B revenue / ~$55B mkt cap",
-            "ceo": "Neil Hunn (Roper) / Bob Hughes (Deltek)",
-            "thesis": "Owner of Deltek — ClearlyRated's deepest AEC integration. 30K global customers, 97% renewal rate. PRISM as AI CX layer for Deltek ecosystem. Roper's stock down 38% from peak — under pressure to show AI thesis.",
-            "approach": "Warm up via Deltek partnership team Q2 2026. Don't approach Deltek without Roper's blessing.",
-        },
-        {
-            "rank": "#2",
-            "company": "Intapp",
-            "category": "Professional Services Tech",
-            "revenue": "$420M ARR (NASDAQ: INTA, ~$1.8B mkt cap)",
-            "ceo": "John Hall (since 2007)",
-            "thesis": "Serves exact same 4 verticals: legal, accounting, AEC, consulting. 2,750+ firms. 120%+ cloud NRR. AI platform (Celeste) with Anthropic Claude integration. PRISM fills a CX gap they'd otherwise build.",
-            "approach": "Reach out Q2 2026 pre-PRISM. Frame as 'the CX intelligence layer for your 4 verticals.'",
-        },
-        {
-            "rank": "#3",
-            "company": "Thomson Reuters",
-            "category": "Professional Services Tech",
-            "revenue": "$9.2B revenue (NYSE: TRI)",
-            "ceo": "Steve Hasker",
-            "thesis": "$11B committed through 2028 for M&A, $6.8B deployed. 'Change the Professions' strategy = vertical AI platforms. $600M+ annual AI investment. CoCounsel at 1M users. Key risk: OpenAI/Perplexity commoditizing legal AI.",
-            "approach": "Warm approach via TR Ventures or Reuters Events connections. Timing: post-PRISM launch Aug-Sep 2026.",
-        },
-        {
-            "rank": "#4",
-            "company": "Unanet",
-            "category": "AEC Platform",
-            "revenue": "~$115-160M ARR (PE-backed: JMI Equity + Onex)",
-            "ceo": "Craig Halliday (since Sep 2019)",
-            "thesis": "Direct integration partner, AEC-focused ERP. 4,200+ GovCon/AEC customers. ~110-120% NRR. Champ AI expansion + GrowthStudio downmarket play. ClearlyRated's $28K ACV AEC customers are already Unanet customers.",
-            "approach": "Closest integration, most natural tuck-in. Approach directly or via Accel-KKR. Same customer base = no integration risk.",
-        },
-        {
-            "rank": "#5",
-            "company": "Avionte",
-            "category": "Staffing Platform",
-            "revenue": "~$41M revenue (Serent Capital-backed)",
-            "ceo": "John Long (founder/operator)",
-            "thesis": "900+ staffing agencies on unified ATS/CRM/payroll/VMS stack. Mid-market staffing agencies (<$50M) prefer Avionte's native stack over Salesforce. Lacks client feedback/performance analytics — the core gap PRISM fills.",
-            "approach": "Strategic fit as acquisition target or deep partner. Staffing vertical alignment is strong.",
-        },
-    ]
-
-    for profile in TOP_5_PROFILES:
-        st.markdown(
-            f'<div style="border:1px solid #1A3C6E; border-left:5px solid #1A3C6E; '
-            f'border-radius:6px; padding:14px 18px; margin-bottom:12px; background:#f8fafc;">'
-            f'<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">'
-            f'<span style="font-size:1.05rem; font-weight:700; color:#1A3C6E;">{profile["rank"]} {profile["company"]}</span>'
-            f'<span style="background:#e6f4ea; color:#1a7a2e; padding:2px 10px; border-radius:10px; '
-            f'font-size:0.75rem; font-weight:600;">{profile["category"]}</span>'
-            f'</div>'
-            f'<div style="font-size:0.82rem; color:#555; margin-bottom:2px;"><b>Revenue:</b> {profile["revenue"]} &nbsp;|&nbsp; <b>CEO:</b> {profile["ceo"]}</div>'
-            f'<div style="font-size:0.82rem; color:#333; margin-top:6px;"><b>Thesis:</b> {profile["thesis"]}</div>'
-            f'<div style="font-size:0.82rem; color:#1A3C6E; margin-top:4px;"><b>Approach:</b> {profile["approach"]}</div>'
-            f'</div>',
-            unsafe_allow_html=True,
-        )
-else:
-    st.warning("Strategic target list not found. Run data sync to download from Google Drive.")

@@ -29,6 +29,27 @@ html, body, [class*="css"], .stMarkdown, button, label, input, textarea, select 
     font-family: 'Inter', sans-serif !important;
 }
 
+/* ── Sidebar nav section headers ──────────────────────────────────────── */
+[data-testid="stSidebar"] [data-testid="stSidebarNavSeparator"] {
+    font-size: 0.65rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 1.5px !important;
+    color: rgba(198,255,126,0.6) !important;
+    text-transform: uppercase;
+    padding: 12px 0 4px 0;
+}
+[data-testid="stSidebar"] [data-testid="stSidebarNavLink"] {
+    border-radius: 6px !important;
+    margin: 1px 4px !important;
+    padding: 6px 12px !important;
+}
+[data-testid="stSidebar"] [data-testid="stSidebarNavLink"][aria-selected="true"] {
+    background-color: rgba(198,255,126,0.15) !important;
+}
+[data-testid="stSidebar"] [data-testid="stSidebarNavLink"]:hover {
+    background-color: rgba(255,255,255,0.08) !important;
+}
+
 /* ── Sidebar: Green/500 dark teal background ─────────────────────────── */
 [data-testid="stSidebar"] > div:first-child {
     background-color: #094C3D;
@@ -112,13 +133,21 @@ if not is_authenticated():
 
 # ── Navigation (Streamlit 1.36+ explicit nav — controls sidebar labels) ─────────
 pg = st.navigation(
-    pages=[
-        st.Page("app_home.py",                       title="CR Pulse",     default=True),
-        st.Page("pages/1_📊_Dashboard.py",            title="Dashboard"),
-        st.Page("pages/2_📁_Strategic_Initiatives.py", title="Strategic Initiatives"),
-        st.Page("pages/3_📈_SM_Efficiency.py",         title="S&M Efficiency"),
-        st.Page("pages/4_⚙️_Settings.py",             title="Settings"),
-    ],
+    pages={
+        "": [
+            st.Page("app_home.py", title="Home", icon="🏠", default=True),
+        ],
+        "DASHBOARDS": [
+            st.Page("pages/1_📊_Dashboard.py", title="KPI Dashboard", icon="📊"),
+            st.Page("pages/3_📈_SM_Efficiency.py", title="S&M Efficiency", icon="📈"),
+        ],
+        "STRATEGY": [
+            st.Page("pages/2_📁_Strategic_Initiatives.py", title="Initiatives", icon="📁"),
+        ],
+        "ADMIN": [
+            st.Page("pages/4_⚙️_Settings.py", title="Settings", icon="⚙️"),
+        ],
+    },
     position="sidebar",
 )
 
@@ -141,34 +170,47 @@ if 'current_year' not in st.session_state:
     st.session_state.current_year = datetime.now().year
 
 # ── Sidebar (runs for every page) ───────────────────────────────────────────────
-logo_path = Path(__file__).parent / "assets" / "pulse-logo.png"
-if logo_path.exists():
-    st.sidebar.image(str(logo_path), use_container_width=True)
+st.sidebar.markdown(
+    '<div style="padding:8px 0 12px 0;">'
+    '<span style="font-size:1.4rem; font-weight:800; color:#C6FF7E; letter-spacing:-0.5px;">CR Pulse</span>'
+    '<span style="font-size:0.7rem; color:rgba(255,255,255,0.5); margin-left:8px;">by ClearlyRated</span>'
+    '</div>',
+    unsafe_allow_html=True,
+)
 
 st.sidebar.markdown("---")
-st.sidebar.subheader("Period")
-quarter = st.sidebar.selectbox(
+
+# Period selector — compact inline
+col_q, col_y = st.sidebar.columns(2)
+quarter = col_q.selectbox(
     "Quarter", ["Q1", "Q2", "Q3", "Q4"],
-    index=["Q1", "Q2", "Q3", "Q4"].index(st.session_state.current_quarter)
+    index=["Q1", "Q2", "Q3", "Q4"].index(st.session_state.current_quarter),
+    label_visibility="collapsed",
 )
-year = st.sidebar.selectbox(
+year = col_y.selectbox(
     "Year", [2024, 2025, 2026, 2027],
-    index=[2024, 2025, 2026, 2027].index(st.session_state.current_year)
+    index=[2024, 2025, 2026, 2027].index(st.session_state.current_year),
+    label_visibility="collapsed",
 )
 
 st.session_state.current_quarter = quarter
 st.session_state.current_year    = year
 
-st.sidebar.markdown("---")
-st.sidebar.info(f"**Period:** {quarter} {year}")
+st.sidebar.markdown(
+    f'<div style="background:rgba(198,255,126,0.12); border:1px solid rgba(198,255,126,0.3); '
+    f'border-radius:6px; padding:8px 12px; margin:8px 0; text-align:center;">'
+    f'<span style="font-size:0.9rem; font-weight:600; color:#C6FF7E;">{quarter} {year}</span>'
+    f'</div>',
+    unsafe_allow_html=True,
+)
 
 # ── User info + logout ───────────────────────────────────────────────────────────
 user = current_user()
 st.sidebar.markdown("---")
 st.sidebar.markdown(
-    f"<div style='font-size:0.8rem; color:rgba(255,255,255,0.7); margin-bottom:4px;'>"
+    f"<div style='font-size:0.75rem; color:rgba(255,255,255,0.5); margin-bottom:2px;'>"
     f"Signed in as</div>"
-    f"<div style='font-size:0.85rem; color:#C6FF7E; font-weight:500; margin-bottom:8px;'>"
+    f"<div style='font-size:0.82rem; color:#C6FF7E; font-weight:500; margin-bottom:8px;'>"
     f"{user.get('name', user.get('email', ''))}</div>",
     unsafe_allow_html=True,
 )
