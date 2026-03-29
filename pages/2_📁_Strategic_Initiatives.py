@@ -343,15 +343,16 @@ MOONSHOT_XLS = os.path.join(os.path.dirname(os.path.dirname(__file__)), "assets"
 if os.path.exists(MOONSHOT_XLS):
     df = pd.read_excel(MOONSHOT_XLS)
 
-    # Key documents
+    # Key documents — same link style as project cards
+    moonshot_docs = " &nbsp;|&nbsp; ".join([
+        '<a href="https://drive.google.com/file/d/1TKs8mtWaKKhWaSs1fe2Br9LSmshp5EtP/view" target="_blank" style="font-size:0.8rem; color:#1A3C6E;">📄 Deltek Profile</a>',
+        '<a href="https://drive.google.com/file/d/1gXCXToRA3aCBd5ZAzXZzcbNRn4Nh7LTc/view" target="_blank" style="font-size:0.8rem; color:#1A3C6E;">📄 Intapp Profile</a>',
+        '<a href="https://drive.google.com/file/d/1bEuMjQ2qZ1v82HF-ReSgHRUMCXBabQQG/view" target="_blank" style="font-size:0.8rem; color:#1A3C6E;">📄 Thomson Reuters Profile</a>',
+        '<a href="https://drive.google.com/file/d/1twwQd6otdP8NayEx65_2XHv05nd8Wkic/view" target="_blank" style="font-size:0.8rem; color:#1A3C6E;">📄 Unanet Profile</a>',
+        '<a href="https://drive.google.com/file/d/1bpKCSZcw76rEe6ytmfBc-KvWzfmlUMR0/view" target="_blank" style="font-size:0.8rem; color:#1A3C6E;">📄 Avionte Profile</a>',
+    ])
     st.markdown(
-        '<div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:16px;">'
-        '<a href="assets/moonshot/Deltek-Investor-Profile-2026.pdf" style="background:#1A3C6E; color:white; padding:6px 14px; border-radius:4px; text-decoration:none; font-size:0.82rem;">📄 Deltek Profile</a>'
-        '<a href="assets/moonshot/Intapp-Investor-Profile-2026.pdf" style="background:#1A3C6E; color:white; padding:6px 14px; border-radius:4px; text-decoration:none; font-size:0.82rem;">📄 Intapp Profile</a>'
-        '<a href="assets/moonshot/Thomson-Reuters-Investor-Profile-2026.pdf" style="background:#1A3C6E; color:white; padding:6px 14px; border-radius:4px; text-decoration:none; font-size:0.82rem;">📄 Thomson Reuters Profile</a>'
-        '<a href="assets/moonshot/Unanet-Investor-Profile-2026.pdf" style="background:#1A3C6E; color:white; padding:6px 14px; border-radius:4px; text-decoration:none; font-size:0.82rem;">📄 Unanet Profile</a>'
-        '<a href="assets/moonshot/Avionte-Investor-Profile-2026.pdf" style="background:#1A3C6E; color:white; padding:6px 14px; border-radius:4px; text-decoration:none; font-size:0.82rem;">📄 Avionte Profile</a>'
-        '</div>',
+        f'<div style="margin-bottom:12px; padding:8px 0; border-bottom:1px solid #eee;">{moonshot_docs}</div>',
         unsafe_allow_html=True,
     )
 
