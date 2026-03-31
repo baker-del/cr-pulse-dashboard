@@ -171,9 +171,9 @@ if 'current_year' not in st.session_state:
 
 # ── Sidebar (runs for every page) ───────────────────────────────────────────────
 st.sidebar.markdown(
-    '<div style="padding:8px 0 12px 0;">'
-    '<span style="font-size:1.4rem; font-weight:800; color:#C6FF7E; letter-spacing:-0.5px;">CR Pulse</span>'
-    '<span style="font-size:0.7rem; color:rgba(255,255,255,0.5); margin-left:8px;">by ClearlyRated</span>'
+    '<div style="padding:8px 0 12px 0; white-space:nowrap;">'
+    '<span style="font-size:1.4rem; font-weight:800; color:#C6FF7E; letter-spacing:-0.5px;">CR Pulse</span><br/>'
+    '<span style="font-size:0.65rem; color:rgba(255,255,255,0.5);">by ClearlyRated</span>'
     '</div>',
     unsafe_allow_html=True,
 )
