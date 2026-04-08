@@ -81,6 +81,9 @@ SQL_PIPELINES = ['default', '757781604']        # Same as New Logo
 # (old CFT/renewal deals from 2023-2024 being marked closed-lost in Q1 2026)
 WIN_RATE_MIN_CREATEDATE = datetime(2025, 1, 1, tzinfo=timezone.utc)
 
+# Win rate: exclude deals closed in the first N business days of a quarter (end-of-prior-quarter cleanup)
+WIN_RATE_QUARTER_GRACE_BDAYS = 3
+
 # Closed-won deal stage IDs across all pipelines
 CLOSED_WON_STAGES = [
     'closedwon',    # Sales Pipeline (default)
@@ -225,6 +228,14 @@ def process_hubspot_deals(deals_data, quarter="Q1", year=2026):
     today_utc = datetime.now(tz=timezone.utc)
     next_180_end = today_utc + timedelta(days=180)
 
+    # Win rate grace: skip first N business days of the quarter
+    _bdays, _d = 0, q_start
+    while _bdays < WIN_RATE_QUARTER_GRACE_BDAYS:
+        _d += timedelta(days=1)
+        if _d.weekday() < 5:  # Mon–Fri
+            _bdays += 1
+    win_rate_start = _d
+
     # Counters
     new_logo_arr = 0
     new_logo_deals = []
@@ -268,7 +279,7 @@ def process_hubspot_deals(deals_data, quarter="Q1", year=2026):
         if dealname.lower().strip() in EXCLUDED_DEALS:
             continue
         amount     = float(props.get('amount', 0) or 0)
-        dealtype   = props.get('dealtype', '').lower()
+        dealtype   = (props.get('dealtype') or '').lower()
 
         # New properties we're now fetching
         discovery  = props.get('demo_discovery_status', '')
@@ -328,10 +339,10 @@ def process_hubspot_deals(deals_data, quarter="Q1", year=2026):
         # discovery_status = "Completed" (labeled "Completed (Qualified)")
         if q1_create and pipeline in SQL_PIPELINES and discovery == 'Completed':
             sqls_total += 1
-            if lead_type == 'Inbound':
-                sqls_inbound += 1
-            elif lead_type in ('Outbound', 'Outbound*'):
+            if lead_type in ('Outbound', 'Outbound*'):
                 sqls_outbound += 1
+            else:
+                sqls_inbound += 1  # Blank/None/Inbound all count as inbound
 
         # ── PIPELINE CREATED ──────────────────────────────────────────────
         # New deals created this quarter in New Logo pipelines
@@ -366,7 +377,8 @@ def process_hubspot_deals(deals_data, quarter="Q1", year=2026):
         # historical cleanup deals (old 2023/2024 agreements closed-lost in 2026)
         # SAL = Staffing/Accounting/Legal; AEC = Architecture/Engineering/Construction
         recent_deal = create_dt is not None and create_dt >= WIN_RATE_MIN_CREATEDATE
-        if q1_close and pipeline in NEW_LOGO_PIPELINES and (closed_won or closed_lost) and recent_deal:
+        valid_close = close_dt is not None and close_dt >= win_rate_start
+        if q1_close and pipeline in NEW_LOGO_PIPELINES and (closed_won or closed_lost) and recent_deal and valid_close:
             overall_won  += int(closed_won)
             overall_lost += int(closed_lost)
             if industry == 'SAL':

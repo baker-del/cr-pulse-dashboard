@@ -3,6 +3,14 @@
 # Update here each quarter — scripts read from this file.
 # Blank value ("") means no target set for that KPI/quarter.
 
+annual:
+  year: 2026
+  hubspot_kpis:
+    New Logo Pipeline Created: "10967504"
+    New Logo ARR:              "2078230"
+    SQL:                       "524"
+    Expansion ARR:             "214000"
+
 Q1:
   year: 2026
   hubspot_kpis:
