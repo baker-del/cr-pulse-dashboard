@@ -500,21 +500,40 @@ def save_kpis_to_db(kpis, quarter="Q1", year=2026):
     # Auto-snapshot previous quarter if not already done
     _auto_snapshot_previous_quarter(db, quarter, year)
 
-    targets = {
-        'Total New ARR Forecast':                        '363323',
-        'New Logo ARR':                         '320523',
-        'Expansion ARR':                        '42800',
-        'SQL':                                  '122',
-        'New Logo Pipeline Created':            '1508344',
-        'Current Qtr Qualified Pipeline': '',
-        'Win Rate (Overall)':                   '20%',
-        'Win Rate (SAL)':                       '20%',
-        'Win Rate (AEC)':                       '22.5%',
-        'ACV (Overall)':                        '22000',
-        'ACV (SAL)':                            '',
-        'ACV (AEC)':                            '',
-        'Expansion Pipeline (Next 180 Days)':   '',
+    # Quarter-specific targets — update each quarter
+    targets_by_quarter = {
+        'Q1': {
+            'Total New ARR Forecast':             '363323',
+            'New Logo ARR':                       '320523',
+            'Expansion ARR':                      '42800',
+            'SQL':                                '122',
+            'New Logo Pipeline Created':          '1508344',
+            'Current Qtr Qualified Pipeline':     '',
+            'Win Rate (Overall)':                 '20%',
+            'Win Rate (SAL)':                     '20%',
+            'Win Rate (AEC)':                     '22.5%',
+            'ACV (Overall)':                      '22000',
+            'ACV (SAL)':                          '',
+            'ACV (AEC)':                          '',
+            'Expansion Pipeline (Next 180 Days)': '',
+        },
+        'Q2': {
+            'Total New ARR Forecast':             '525363',   # NL $471,863 + Exp $53,500
+            'New Logo ARR':                       '471863',
+            'Expansion ARR':                      '53500',
+            'SQL':                                '134',      # Inbound 104 + Outbound 30
+            'New Logo Pipeline Created':          '2818076',
+            'Current Qtr Qualified Pipeline':     '2220532',
+            'Win Rate (Overall)':                 '25%',
+            'Win Rate (SAL)':                     '25%',
+            'Win Rate (AEC)':                     '25%',
+            'ACV (Overall)':                      '',
+            'ACV (SAL)':                          '',
+            'ACV (AEC)':                          '',
+            'Expansion Pipeline (Next 180 Days)': '133750',
+        },
     }
+    targets = targets_by_quarter.get(quarter, targets_by_quarter['Q2'])
 
     kpi_entries = []
 
