@@ -620,7 +620,8 @@ class Database:
         Upsert weekly cohort rows for a quarter/year/vertical.
         Deletes existing rows for that combo, then inserts fresh ones.
         """
-        with self.get_session() as session:
+        session = self.get_session()
+        try:
             session.query(WeeklyCohort).filter_by(
                 quarter=quarter, year=year, vertical=vertical
             ).delete()
@@ -652,6 +653,8 @@ class Database:
                     updated_at   = datetime.now(),
                 ))
             session.commit()
+        finally:
+            session.close()
 
     def get_weekly_cohorts(self, quarter: str, year: int) -> dict:
         """
@@ -659,11 +662,13 @@ class Database:
         matching the same structure as load_weekly_cohorts() in the page.
         Returns None if no data found.
         """
-        with self.get_session() as session:
-            q = session.query(WeeklyCohort).filter_by(
+        session = self.get_session()
+        try:
+            rows = session.query(WeeklyCohort).filter_by(
                 quarter=quarter, year=year
-            ).order_by(WeeklyCohort.vertical, WeeklyCohort.week_start)
-            rows = q.all()
+            ).order_by(WeeklyCohort.vertical, WeeklyCohort.week_start).all()
+        finally:
+            session.close()
 
         if not rows:
             return None
