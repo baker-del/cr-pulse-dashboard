@@ -44,8 +44,15 @@ PROPERTIES = [
     'createdate',
     'demo_discovery_status',
     'sales_outbound_vs_inbound',
+    'deal_source_bucket',             # Marketing Driven / Sales Driven / CSM Driven
     'hs_deal_stage_probability',
     'company_industry_dropdown',
+    # Stage entry dates — used for funnel conversion rate calculations
+    'hs_v2_date_entered_qualifiedtobuy',          # SAL: Solution Alignment (Sales Pipeline)
+    'hs_v2_date_entered_decisionmakerboughtin',   # SAL: Demo / Fit (Sales Pipeline)
+    'hs_v2_date_entered_1102698286',              # AEC: Discovery Call (ClientSavvy Pipeline)
+    'hs_v2_date_entered_1102698287',              # AEC: Demo Performed (ClientSavvy Pipeline)
+    'hs_v2_date_entered_1102698288',              # AEC: ROI Call Completed (ClientSavvy Pipeline)
 ]
 
 NEW_LOGO_PIPELINES = ['default', '757781604']

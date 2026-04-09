@@ -1,45 +1,27 @@
 """
 CR Pulse — 2026 Annual KPI Tracker
-
-Tracks cumulative progress toward annual targets for the 4 HubSpot KPIs:
-  New Logo Pipeline Created, New Logo ARR, SQL, Expansion ARR
-
-Data: sums quarterly actuals from the kpis table (Q1–Q4 2026).
-Targets: loaded from config/targets.yaml > annual > hubspot_kpis.
+Cumulative progress toward annual targets for 4 HubSpot KPIs.
 """
 
 import yaml
 import streamlit as st
 import pandas as pd
+from datetime import date
 from pathlib import Path
 from database.db import get_db
 
-# ── Config ─────────────────────────────────────────────────────────────────────
-YEAR = 2026
+YEAR     = 2026
 QUARTERS = ['Q1', 'Q2', 'Q3', 'Q4']
-
-# Layout: Row 1 = ARR pair, Row 2 = Pipeline + SQL side by side
-ANNUAL_KPI_LAYOUT = [
-    ['New Logo ARR', 'Expansion ARR'],
-    ['New Logo Pipeline Created', 'SQL'],
-]
-ANNUAL_KPIS = [kpi for row in ANNUAL_KPI_LAYOUT for kpi in row]
 
 CURRENCY_KPIS = {'New Logo Pipeline Created', 'New Logo ARR', 'Expansion ARR'}
 
-KPI_ICONS = {
-    'New Logo Pipeline Created': '🏗️',
-    'New Logo ARR':              '💰',
-    'SQL':                       '🎯',
-    'Expansion ARR':             '📈',
-}
+ANNUAL_KPIS = [
+    {'name': 'New Logo ARR',              'icon': '💰', 'owner': 'Sales'},
+    {'name': 'Expansion ARR',             'icon': '📈', 'owner': 'CS'},
+    {'name': 'New Logo Pipeline Created', 'icon': '🏗️', 'owner': 'Marketing'},
+    {'name': 'SQL',                       'icon': '🎯', 'owner': 'Sales / Marketing'},
+]
 
-KPI_OWNERS = {
-    'New Logo Pipeline Created': 'Marketing',
-    'New Logo ARR':              'Sales',
-    'SQL':                       'Sales / Marketing',
-    'Expansion ARR':             'CS',
-}
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
 def load_annual_targets() -> dict:
@@ -67,14 +49,13 @@ def fmt_currency(v: float) -> str:
     return f"${v:,.0f}"
 
 
-def fmt_value(v: float, kpi_name: str) -> str:
+def fmt_val(v: float, kpi_name: str) -> str:
     if kpi_name in CURRENCY_KPIS:
         return fmt_currency(v)
     return f"{int(v):,}"
 
 
 def get_quarterly_actuals(db, kpi_name: str) -> dict:
-    """Return {quarter: latest_actual_float} for each quarter in YEAR."""
     result = {}
     for q in QUARTERS:
         df = db.get_latest_kpis(q, YEAR)
@@ -90,100 +71,159 @@ def get_quarterly_actuals(db, kpi_name: str) -> dict:
     return result
 
 
-def pace_color(pct: float) -> str:
-    if pct >= 90:
-        return '#2ecc71'
-    if pct >= 70:
-        return '#f39c12'
+def status_color(pct: float) -> str:
+    if pct >= 90:  return '#2ecc71'
+    if pct >= 70:  return '#f39c12'
     return '#e74c3c'
 
 
-# ── Page ───────────────────────────────────────────────────────────────────────
-st.set_page_config(page_title='2026 Annual Dashboard', layout='wide')
-st.title('📅 2026 Annual KPI Tracker')
-st.caption(f'Cumulative HubSpot actuals vs. full-year targets — updated each time HubSpot syncs')
+def status_label(pct: float, year_pct: float) -> tuple[str, str]:
+    """Return (label, color) comparing % to target vs % of year elapsed."""
+    gap = pct - year_pct
+    if pct >= 100:
+        return 'Complete', '#2ecc71'
+    if gap >= 0:
+        return 'On Pace', '#2ecc71'
+    if gap >= -10:
+        return 'Slightly Behind', '#f39c12'
+    return 'Behind Pace', '#e74c3c'
 
-db = get_db()
+
+# ── Load data ──────────────────────────────────────────────────────────────────
+db      = get_db()
 targets = load_annual_targets()
 
-# ── Year progress bar ─────────────────────────────────────────────────────────
-from datetime import date
-today = date.today()
-year_start = date(YEAR, 1, 1)
-year_end   = date(YEAR, 12, 31)
-year_total   = (year_end - year_start).days + 1
+today       = date.today()
+year_start  = date(YEAR, 1, 1)
+year_end    = date(YEAR, 12, 31)
+year_total  = (year_end - year_start).days + 1
 year_elapsed = min(max((today - year_start).days + 1, 0), year_total)
-year_pct     = year_elapsed / year_total * 100
+year_pct    = year_elapsed / year_total * 100
 
+# Pre-compute all KPI data
+kpi_data = []
+for kpi in ANNUAL_KPIS:
+    name      = kpi['name']
+    target    = parse_num(targets.get(name, 0))
+    q_actuals = get_quarterly_actuals(db, name)
+    ytd       = sum(v for v in q_actuals.values() if v is not None)
+    pct       = (ytd / target * 100) if target > 0 else 0
+    label, lcolor = status_label(pct, year_pct)
+    kpi_data.append({
+        **kpi,
+        'target':    target,
+        'q_actuals': q_actuals,
+        'ytd':       ytd,
+        'pct':       pct,
+        'label':     label,
+        'lcolor':    lcolor,
+    })
+
+
+# ── Page header ────────────────────────────────────────────────────────────────
+st.title('📅 2026 Annual KPI Tracker')
+st.caption('Cumulative HubSpot actuals vs. full-year targets')
+
+# Year progress bar
 st.markdown(f"""
-<div style="margin-bottom:24px">
-  <div style="display:flex;justify-content:space-between;font-size:13px;color:#888;margin-bottom:4px">
+<div style="margin:4px 0 28px 0">
+  <div style="display:flex;justify-content:space-between;font-size:12px;
+              color:#888;margin-bottom:5px;">
     <span>Jan 1</span>
-    <span style="font-weight:600;color:#333">Year {year_pct:.0f}% elapsed ({year_elapsed}/{year_total} days)</span>
+    <span style="font-weight:600;color:#444;">
+      {year_pct:.0f}% of year elapsed &nbsp;({today.strftime('%b %-d')})
+    </span>
     <span>Dec 31</span>
   </div>
-  <div style="background:#e9ecef;border-radius:6px;height:10px">
-    <div style="background:#6c757d;width:{year_pct:.1f}%;height:10px;border-radius:6px"></div>
+  <div style="background:#e9ecef;border-radius:6px;height:8px;">
+    <div style="background:#94a3b8;width:{year_pct:.1f}%;height:8px;border-radius:6px;"></div>
   </div>
 </div>
 """, unsafe_allow_html=True)
 
-# ── KPI cards ─────────────────────────────────────────────────────────────────
-def kpi_card(col, kpi_name: str):
-    target_raw = targets.get(kpi_name, '')
-    target_val = parse_num(target_raw)
-    q_actuals  = get_quarterly_actuals(db, kpi_name)
-    ytd        = sum(v for v in q_actuals.values() if v is not None)
-    pct        = (ytd / target_val * 100) if target_val > 0 else 0
-    bar_color  = pace_color(pct)
-    bar_pct    = min(pct, 100)
+st.markdown("---")
 
-    with col:
-        st.markdown(f"#### {KPI_ICONS[kpi_name]} {kpi_name}")
-        st.caption(f"Owner: {KPI_OWNERS[kpi_name]}")
+# ── Section 1: Headline cards (2 per row) ─────────────────────────────────────
+st.markdown("#### Year-to-Date Summary")
 
-        m1, m2, m3, m4 = st.columns(4)
-        m1.metric("YTD Actual",    fmt_value(ytd, kpi_name))
-        m2.metric("Annual Target", fmt_value(target_val, kpi_name))
-        m3.metric("% to Target",   f"{pct:.1f}%")
-        m4.metric("Remaining",     fmt_value(max(target_val - ytd, 0), kpi_name))
+for i in range(0, len(kpi_data), 2):
+    cols = st.columns(2, gap="large")
+    for j, col in enumerate(cols):
+        if i + j >= len(kpi_data):
+            break
+        k = kpi_data[i + j]
+        bar_pct   = min(k['pct'], 100)
+        bar_color = status_color(k['pct'])
+        remaining = max(k['target'] - k['ytd'], 0)
 
-        st.markdown(f"""
-        <div style="margin:4px 0 10px 0">
-          <div style="background:#e9ecef;border-radius:6px;height:10px">
-            <div style="background:{bar_color};width:{bar_pct:.1f}%;height:10px;border-radius:6px"></div>
-          </div>
-        </div>
-        """, unsafe_allow_html=True)
+        with col:
+            st.markdown(f"""
+            <div style="border:1px solid #e8e8e8; border-radius:10px; padding:20px 24px;
+                        background:#fff; box-shadow:0 1px 4px rgba(0,0,0,0.06);">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;
+                          margin-bottom:14px;">
+                <div>
+                  <div style="font-size:0.78rem;font-weight:700;color:#888;
+                              text-transform:uppercase;letter-spacing:0.05em;
+                              margin-bottom:4px;">{k['icon']} {k['name']}</div>
+                  <div style="font-size:2rem;font-weight:800;color:#0F7D64;
+                              line-height:1.1;">{fmt_val(k['ytd'], k['name'])}</div>
+                  <div style="font-size:0.8rem;color:#999;margin-top:2px;">
+                    of {fmt_val(k['target'], k['name'])} target
+                  </div>
+                </div>
+                <div style="text-align:right;">
+                  <div style="font-size:1.6rem;font-weight:700;color:{bar_color};">
+                    {k['pct']:.1f}%
+                  </div>
+                  <div style="background:{k['lcolor']}22;color:{k['lcolor']};
+                              font-size:0.72rem;font-weight:600;padding:2px 8px;
+                              border-radius:10px;margin-top:4px;">{k['label']}</div>
+                </div>
+              </div>
+              <div style="background:#f0f2f5;border-radius:6px;height:8px;margin-bottom:10px;">
+                <div style="background:{bar_color};width:{bar_pct:.1f}%;height:8px;
+                            border-radius:6px;"></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:0.78rem;color:#999;">
+                <span>Owner: {k['owner']}</span>
+                <span>{fmt_val(remaining, k['name'])} remaining</span>
+              </div>
+            </div>
+            """, unsafe_allow_html=True)
+            st.markdown("")
 
-        rows, running = [], 0.0
-        for q in QUARTERS:
-            val = q_actuals.get(q)
-            running += val if val is not None else 0.0
-            rows.append({
-                'Quarter':       q,
-                'Actual':        fmt_value(val, kpi_name) if val is not None else '—',
-                'Running Total': fmt_value(running, kpi_name),
-                '% of Annual':   f"{running/target_val*100:.1f}%" if target_val > 0 else '—',
-                'Status':        '✅' if val is not None else '⏳',
-            })
+st.markdown("---")
 
-        st.dataframe(
-            pd.DataFrame(rows),
-            use_container_width=True,
-            hide_index=True,
-            column_config={
-                'Quarter':       st.column_config.TextColumn('Quarter', width=70),
-                'Actual':        st.column_config.TextColumn('Actual',  width=120),
-                'Running Total': st.column_config.TextColumn('Running', width=120),
-                '% of Annual':   st.column_config.TextColumn('% Annual', width=90),
-                'Status':        st.column_config.TextColumn('',        width=40),
-            }
-        )
+# ── Section 2: Quarterly breakdown table ──────────────────────────────────────
+st.markdown("#### Quarterly Breakdown")
 
+rows = []
+for k in kpi_data:
+    row = {'KPI': f"{k['icon']} {k['name']}"}
+    running = 0.0
+    for q in QUARTERS:
+        val = k['q_actuals'].get(q)
+        running += val if val is not None else 0.0
+        row[q] = fmt_val(val, k['name']) if val is not None else '—'
+    row['YTD']    = fmt_val(k['ytd'], k['name'])
+    row['Target'] = fmt_val(k['target'], k['name'])
+    row['% Done'] = f"{k['pct']:.1f}%"
+    rows.append(row)
 
-for row_kpis in ANNUAL_KPI_LAYOUT:
-    cols = st.columns(len(row_kpis), gap="large")
-    for col, kpi_name in zip(cols, row_kpis):
-        kpi_card(col, kpi_name)
-    st.divider()
+df = pd.DataFrame(rows)
+st.dataframe(
+    df,
+    use_container_width=True,
+    hide_index=True,
+    column_config={
+        'KPI':    st.column_config.TextColumn('KPI',    width='medium'),
+        'Q1':     st.column_config.TextColumn('Q1',     width='small'),
+        'Q2':     st.column_config.TextColumn('Q2',     width='small'),
+        'Q3':     st.column_config.TextColumn('Q3',     width='small'),
+        'Q4':     st.column_config.TextColumn('Q4',     width='small'),
+        'YTD':    st.column_config.TextColumn('YTD',    width='small'),
+        'Target': st.column_config.TextColumn('Target', width='small'),
+        '% Done': st.column_config.TextColumn('% Done', width='small'),
+    }
+)

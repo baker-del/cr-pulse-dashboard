@@ -262,6 +262,22 @@ def process_hubspot_deals(deals_data, quarter="Q1", year=2026):
     new_logo_amounts = []   # closed won amounts for ACV (median)
     sal_amounts = []
     aec_amounts = []
+    sal_arr = 0             # SAL closed won ARR this quarter
+    aec_arr = 0             # AEC closed won ARR this quarter
+    sqls_sal = 0            # Marketing-attributed SQLs — SAL industry
+    sqls_aec = 0            # Marketing-attributed SQLs — AEC industry
+    sqls_sal_total = 0      # All SQLs — SAL (any source bucket)
+    sqls_aec_total = 0      # All SQLs — AEC (any source bucket)
+    sqls_sal_sales = 0      # Sales Driven SQLs — SAL
+    sqls_aec_sales = 0      # Sales Driven SQLs — AEC
+    sqls_sal_csm   = 0      # CSM Driven SQLs — SAL
+    sqls_aec_csm   = 0      # CSM Driven SQLs — AEC
+    # Stage funnel counters (for conversion rate calculations)
+    sal_sol_align = 0       # SAL deals that entered Solution Alignment (Sales Pipeline)
+    sal_demo_fit = 0        # SAL deals that entered Demo/Fit (Sales Pipeline)
+    aec_disc_call = 0       # AEC deals that entered Discovery Call (ClientSavvy Pipeline)
+    aec_demo_perf = 0       # AEC deals that entered Demo Performed (ClientSavvy Pipeline)
+    aec_roi_call = 0        # AEC deals that entered ROI Call Completed (ClientSavvy Pipeline)
 
     # Exclude known test deals
     EXCLUDED_DEALS = {
@@ -282,8 +298,9 @@ def process_hubspot_deals(deals_data, quarter="Q1", year=2026):
         dealtype   = (props.get('dealtype') or '').lower()
 
         # New properties we're now fetching
-        discovery  = props.get('demo_discovery_status', '')
-        lead_type  = props.get('sales_outbound_vs_inbound', '')
+        discovery    = props.get('demo_discovery_status', '')
+        lead_type    = props.get('sales_outbound_vs_inbound', '')
+        source_bucket = (props.get('deal_source_bucket', '') or '').strip()
 
         close_dt  = _parse_dt(props.get('closedate', ''))
         create_dt = _parse_dt(props.get('createdate', ''))
@@ -306,8 +323,10 @@ def process_hubspot_deals(deals_data, quarter="Q1", year=2026):
                 new_logo_amounts.append(amount)
                 if industry == 'SAL':
                     sal_amounts.append(amount)
+                    sal_arr += amount
                 elif industry == 'AEC':
                     aec_amounts.append(amount)
+                    aec_arr += amount
 
         # ── EXPANSION ARR ─────────────────────────────────────────────────
         # Closed Won this quarter, in Expansion pipeline
@@ -337,12 +356,27 @@ def process_hubspot_deals(deals_data, quarter="Q1", year=2026):
         # ── SQLs ──────────────────────────────────────────────────────────
         # Created this quarter, in Sales or ClientSavvy Sales pipeline,
         # discovery_status = "Completed" (labeled "Completed (Qualified)")
+        # deal_source_bucket: blank or "Marketing Driven" → attributed to MQL funnel
+        #                     "Sales Driven" / "CSM Driven" → excluded from MQL→SQL
+        is_marketing_sql = source_bucket in ('Marketing Driven', '')
+        is_sales_sql     = source_bucket == 'Sales Driven'
+        is_csm_sql       = source_bucket == 'CSM Driven'
         if q1_create and pipeline in SQL_PIPELINES and discovery == 'Completed':
             sqls_total += 1
             if lead_type in ('Outbound', 'Outbound*'):
                 sqls_outbound += 1
             else:
-                sqls_inbound += 1  # Blank/None/Inbound all count as inbound
+                sqls_inbound += 1
+            if industry == 'SAL':
+                sqls_sal_total += 1
+                if is_marketing_sql: sqls_sal += 1
+                elif is_sales_sql:   sqls_sal_sales += 1
+                elif is_csm_sql:     sqls_sal_csm += 1
+            elif industry == 'AEC':
+                sqls_aec_total += 1
+                if is_marketing_sql: sqls_aec += 1
+                elif is_sales_sql:   sqls_aec_sales += 1
+                elif is_csm_sql:     sqls_aec_csm += 1
 
         # ── PIPELINE CREATED ──────────────────────────────────────────────
         # New deals created this quarter in New Logo pipelines
@@ -370,6 +404,22 @@ def process_hubspot_deals(deals_data, quarter="Q1", year=2026):
                 and close_dt is not None
                 and today_utc <= close_dt <= next_180_end):
             expansion_next_180 += amount
+
+        # ── FUNNEL CONVERSION RATES ───────────────────────────────────────────
+        # SAL: Sales Pipeline — Solution Alignment → Demo/Fit
+        if pipeline == 'default' and industry == 'SAL':
+            if props.get('hs_v2_date_entered_qualifiedtobuy'):
+                sal_sol_align += 1
+            if props.get('hs_v2_date_entered_decisionmakerboughtin'):
+                sal_demo_fit += 1
+        # AEC: ClientSavvy Pipeline — Discovery Call → Demo Performed → ROI Call
+        if pipeline == '757781604' and industry == 'AEC':
+            if props.get('hs_v2_date_entered_1102698286'):
+                aec_disc_call += 1
+            if props.get('hs_v2_date_entered_1102698287'):
+                aec_demo_perf += 1
+            if props.get('hs_v2_date_entered_1102698288'):
+                aec_roi_call += 1
 
         # ── WIN RATES ─────────────────────────────────────────────────────
         # Deals closed this quarter in New Logo pipelines
@@ -422,6 +472,11 @@ def process_hubspot_deals(deals_data, quarter="Q1", year=2026):
     sal_wr     = round(sal_won     / sal_total     * 100, 2) if sal_total     > 0 else 0
     aec_wr     = round(aec_won     / aec_total     * 100, 2) if aec_total     > 0 else 0
 
+    # Funnel conversion rates
+    sal_disc_demo_pct = round(sal_demo_fit / sal_sol_align * 100, 1) if sal_sol_align > 0 else 0
+    aec_disc_demo_pct = round(aec_demo_perf / aec_disc_call * 100, 1) if aec_disc_call > 0 else 0
+    aec_demo_roi_pct  = round(aec_roi_call  / aec_demo_perf * 100, 1) if aec_demo_perf > 0 else 0
+
     # ACV — median deal amount for closed won new logo deals
     acv_overall = round(statistics.median(new_logo_amounts), 2) if new_logo_amounts else 0
     acv_sal     = round(statistics.median(sal_amounts), 2)      if sal_amounts      else 0
@@ -445,12 +500,29 @@ def process_hubspot_deals(deals_data, quarter="Q1", year=2026):
             'value': round(expansion_forecast, 2),
         },
         'sqls': {
-            'total':    sqls_total,
-            'inbound':  sqls_inbound,
-            'outbound': sqls_outbound,
+            'total':      sqls_total,
+            'inbound':    sqls_inbound,
+            'outbound':   sqls_outbound,
+            'sal':        sqls_sal,
+            'aec':        sqls_aec,
+            'sal_total':  sqls_sal_total,
+            'aec_total':  sqls_aec_total,
+            'sal_sales':  sqls_sal_sales,
+            'aec_sales':  sqls_aec_sales,
+            'sal_csm':    sqls_sal_csm,
+            'aec_csm':    sqls_aec_csm,
             'forecast': sql_forecast,
             'days_elapsed': min(q_elapsed_days, q_total_days),
             'days_total':   q_total_days,
+        },
+        'bookings': {
+            'sal': round(sal_arr, 2),
+            'aec': round(aec_arr, 2),
+        },
+        'funnel_conversion': {
+            'sal_disc_demo':  {'pct': sal_disc_demo_pct, 'num': sal_demo_fit,  'den': sal_sol_align},
+            'aec_disc_demo':  {'pct': aec_disc_demo_pct, 'num': aec_demo_perf, 'den': aec_disc_call},
+            'aec_demo_roi':   {'pct': aec_demo_roi_pct,  'num': aec_roi_call,  'den': aec_demo_perf},
         },
         'pipeline_created': {
             'total': round(pipeline_created, 2),
@@ -621,6 +693,78 @@ def save_kpis_to_db(kpis, quarter="Q1", year=2026):
         entry('ACV (AEC)', 'Sales', 'Monthly',
               kpis['acv']['aec']['value'], targets['ACV (AEC)'],
               'HubSpot', f"Median deal size AEC ({kpis['acv']['aec']['count']} deals)"),
+
+        # ── S&M Efficiency KPIs (auto-populated from HubSpot) ─────────────
+        entry('SM_SAL_Win_Rate', 'S&M Initiative', 'Monthly',
+              f"{kpis['win_rates']['sal']['rate']}%", '20%',
+              'HubSpot', f"Won: {kpis['win_rates']['sal']['won']}, Lost: {kpis['win_rates']['sal']['lost']}"),
+
+        entry('SM_AEC_Win_Rate', 'S&M Initiative', 'Monthly',
+              f"{kpis['win_rates']['aec']['rate']}%", '25%',
+              'HubSpot', f"Won: {kpis['win_rates']['aec']['won']}, Lost: {kpis['win_rates']['aec']['lost']}"),
+
+        entry('SM_SAL_Pipeline_ARR', 'S&M Initiative', 'Weekly',
+              kpis['pipeline_created']['sal'], '600000',
+              'HubSpot', f"SAL new pipeline created in {quarter}"),
+
+        entry('SM_AEC_Pipeline_ARR', 'S&M Initiative', 'Weekly',
+              kpis['pipeline_created']['aec'], '1600000',
+              'HubSpot', f"AEC new pipeline created in {quarter}"),
+
+        entry('SM_SAL_Bookings', 'S&M Initiative', 'Monthly',
+              kpis['bookings']['sal'], '180000',
+              'HubSpot', f"SAL closed won new logo ARR in {quarter}"),
+
+        entry('SM_AEC_Bookings', 'S&M Initiative', 'Monthly',
+              kpis['bookings']['aec'], '292000',
+              'HubSpot', f"AEC closed won new logo ARR in {quarter}"),
+
+        entry('SM_SAL_SQL_Volume', 'S&M Initiative', 'Weekly',
+              kpis['sqls']['sal'], '67',
+              'HubSpot', f"SAL marketing-attributed SQLs in {quarter}"),
+
+        entry('SM_AEC_SQL_Volume', 'S&M Initiative', 'Weekly',
+              kpis['sqls']['aec'], '57',
+              'HubSpot', f"AEC marketing-attributed SQLs in {quarter}"),
+
+        entry('SM_SAL_SQL_Total', 'S&M Initiative', 'Weekly',
+              kpis['sqls']['sal_total'], '',
+              'HubSpot', f"SAL total SQLs (all sources) in {quarter}"),
+
+        entry('SM_AEC_SQL_Total', 'S&M Initiative', 'Weekly',
+              kpis['sqls']['aec_total'], '',
+              'HubSpot', f"AEC total SQLs (all sources) in {quarter}"),
+
+        entry('SM_SAL_SQL_SalesDriven', 'S&M Initiative', 'Weekly',
+              kpis['sqls']['sal_sales'], '',
+              'HubSpot', f"SAL sales-driven SQLs in {quarter}"),
+
+        entry('SM_AEC_SQL_SalesDriven', 'S&M Initiative', 'Weekly',
+              kpis['sqls']['aec_sales'], '',
+              'HubSpot', f"AEC sales-driven SQLs in {quarter}"),
+
+        entry('SM_SAL_SQL_CSMDriven', 'S&M Initiative', 'Weekly',
+              kpis['sqls']['sal_csm'], '',
+              'HubSpot', f"SAL CSM-driven SQLs in {quarter}"),
+
+        entry('SM_AEC_SQL_CSMDriven', 'S&M Initiative', 'Weekly',
+              kpis['sqls']['aec_csm'], '',
+              'HubSpot', f"AEC CSM-driven SQLs in {quarter}"),
+
+        entry('SM_SAL_Disc_Demo', 'S&M Initiative', 'Monthly',
+              f"{kpis['funnel_conversion']['sal_disc_demo']['pct']}%", '45%',
+              'HubSpot',
+              f"SAL Solution Alignment→Demo/Fit: {kpis['funnel_conversion']['sal_disc_demo']['num']}/{kpis['funnel_conversion']['sal_disc_demo']['den']} deals"),
+
+        entry('SM_AEC_Disc_Demo', 'S&M Initiative', 'Monthly',
+              f"{kpis['funnel_conversion']['aec_disc_demo']['pct']}%", '45%',
+              'HubSpot',
+              f"AEC Discovery Call→Demo Performed: {kpis['funnel_conversion']['aec_disc_demo']['num']}/{kpis['funnel_conversion']['aec_disc_demo']['den']} deals"),
+
+        entry('SM_AEC_Demo_ROI', 'S&M Initiative', 'Monthly',
+              f"{kpis['funnel_conversion']['aec_demo_roi']['pct']}%", '70%',
+              'HubSpot',
+              f"AEC Demo Performed→ROI Call: {kpis['funnel_conversion']['aec_demo_roi']['num']}/{kpis['funnel_conversion']['aec_demo_roi']['den']} deals"),
     ]
 
     saved_count   = 0

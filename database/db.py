@@ -173,8 +173,9 @@ class Database:
             db_path = os.path.join(os.path.dirname(__file__), 'kpi_dashboard.db')
             db_url = f'sqlite:///{db_path}'
 
-        self.engine = create_engine(db_url, echo=False)
-        self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
+        self.engine = create_engine(db_url, echo=False, pool_pre_ping=True)
+        self.SessionLocal = sessionmaker(autocommit=False, autoflush=False,
+                                         expire_on_commit=True, bind=self.engine)
 
     def create_tables(self):
         """Create all tables if they don't exist"""
@@ -241,7 +242,9 @@ class Database:
                 KPI.year     == kpi_data.get('year'),
             ).order_by(KPI.date.desc(), KPI.id.desc()).first()
 
-            if latest and str(latest.actual_value or '').strip() == actual:
+            target = str(kpi_data.get('target_value', '') or '').strip()
+            if latest and str(latest.actual_value or '').strip() == actual \
+                    and str(latest.target_value or '').strip() == target:
                 return None  # Value unchanged — leave existing record and date intact
         finally:
             session.close()

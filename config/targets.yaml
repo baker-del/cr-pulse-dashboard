@@ -34,13 +34,27 @@ Q2:
     Total New ARR Forecast:             "525363"    # NL $471,863 + Exp $53,500
     New Logo ARR:                       "471863"
     Expansion ARR:                      "53500"
-    SQL:                                "134"       # Inbound 104 + Outbound 30
-    New Logo Pipeline Created:          "2818076"
+    SQL:                                "124"       # SAL 67 + AEC 57
+    New Logo Pipeline Created:          "2200000"   # SAL $600K + AEC $1.6M
     Current Qtr Qualified Pipeline:     "2220532"
     Win Rate (Overall):                 "25%"
     Win Rate (SAL):                     "25%"
     Win Rate (AEC):                     "25%"
-    ACV (Overall):                      ""
-    ACV (SAL):                          ""
+    ACV (Overall):                      "28000"
+    ACV (SAL):                          "9000"
     ACV (AEC):                          ""
     Expansion Pipeline (Next 180 Days): "133750"
+  sm_kpis:
+    SM_SAL_Pipeline_ARR:                "600000"    # SAL pipeline created
+    SM_AEC_Pipeline_ARR:                "1600000"   # AEC pipeline created
+    SM_SAL_SQL_Volume:                  "67"
+    SM_AEC_SQL_Volume:                  "57"
+    SM_SAL_Win_Rate:                    "20%"
+    SM_AEC_Win_Rate:                    "25%"
+    SM_SAL_Bookings:                    "180000"
+    SM_AEC_Bookings:                    "292000"
+    SM_SAL_MQL_SQL:                     "35%"
+    SM_AEC_MQL_SQL:                     "35%"
+    SM_SAL_Disc_Demo:                   "45%"
+    SM_AEC_Disc_Demo:                   "45%"
+    SM_AEC_Demo_ROI:                    "70%"
