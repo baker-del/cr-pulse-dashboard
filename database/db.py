@@ -128,6 +128,37 @@ class QuarterSnapshot(Base):
         }
 
 
+class WeeklyCohort(Base):
+    """Weekly funnel cohort rows for S&M Efficiency (SAL and AEC)."""
+    __tablename__ = 'weekly_cohorts'
+
+    id           = Column(Integer, primary_key=True, autoincrement=True)
+    quarter      = Column(String(10), nullable=False, index=True)
+    year         = Column(Integer,    nullable=False, index=True)
+    vertical     = Column(String(10), nullable=False)   # SAL or AEC
+    week_label   = Column(String(20), nullable=False)   # e.g. "Apr 1"
+    week_start   = Column(Date,       nullable=False)
+    total_mqls   = Column(Integer, default=0)
+    icp_mqls     = Column(Integer, default=0)
+    icp_pct      = Column(Float,   default=0)
+    sal_n        = Column(Integer, default=0)   # BDR-accepted contacts
+    mql_sal_pct  = Column(Float,   default=0)
+    sql_mkt      = Column(Integer, default=0)
+    sql_sales    = Column(Integer, default=0)
+    sql_csm      = Column(Integer, default=0)
+    sql_total    = Column(Integer, default=0)
+    sal_sql_pct  = Column(Float,   default=0)
+    pipeline     = Column(Float,   default=0)
+    cum_mqls     = Column(Integer, default=0)
+    cum_sals     = Column(Integer, default=0)
+    cum_sqls_mkt = Column(Integer, default=0)
+    cum_mql_sal  = Column(Float,   default=0)
+    cum_sal_sql  = Column(Float,   default=0)
+    cum_mql_sql  = Column(Float,   default=0)
+    lead_sources = Column(Text,    default='')
+    updated_at   = Column(DateTime, default=datetime.now)
+
+
 class Target(Base):
     """Stores quarterly targets (loaded from CSV)"""
     __tablename__ = 'targets'
@@ -580,6 +611,93 @@ class Database:
                 'annual_target': row.get('2026_Target', '')
             }
             self.save_target(target_data)
+
+
+    # ── Weekly cohort methods ─────────────────────────────────────────────────
+
+    def save_weekly_cohorts(self, rows: list, quarter: str, year: int, vertical: str):
+        """
+        Upsert weekly cohort rows for a quarter/year/vertical.
+        Deletes existing rows for that combo, then inserts fresh ones.
+        """
+        with self.get_session() as session:
+            session.query(WeeklyCohort).filter_by(
+                quarter=quarter, year=year, vertical=vertical
+            ).delete()
+            for r in rows:
+                session.add(WeeklyCohort(
+                    quarter      = quarter,
+                    year         = year,
+                    vertical     = vertical,
+                    week_label   = r['week_label'],
+                    week_start   = r['week_start'].date() if hasattr(r['week_start'], 'date') else r['week_start'],
+                    total_mqls   = r.get('total_mqls',   0),
+                    icp_mqls     = r.get('icp_mqls',     0),
+                    icp_pct      = r.get('icp_pct',      0),
+                    sal_n        = r.get('sal_n',         0),
+                    mql_sal_pct  = r.get('mql_sal_pct',  0),
+                    sql_mkt      = r.get('sql_mkt',      0),
+                    sql_sales    = r.get('sql_sales',    0),
+                    sql_csm      = r.get('sql_csm',      0),
+                    sql_total    = r.get('sql_total',    0),
+                    sal_sql_pct  = r.get('sal_sql_pct',  0),
+                    pipeline     = r.get('pipeline',     0),
+                    cum_mqls     = r.get('cum_mqls',     0),
+                    cum_sals     = r.get('cum_sals',     0),
+                    cum_sqls_mkt = r.get('cum_sqls_mkt', 0),
+                    cum_mql_sal  = r.get('cum_mql_sal',  0),
+                    cum_sal_sql  = r.get('cum_sal_sql',  0),
+                    cum_mql_sql  = r.get('cum_mql_sql',  0),
+                    lead_sources = r.get('lead_sources', ''),
+                    updated_at   = datetime.now(),
+                ))
+            session.commit()
+
+    def get_weekly_cohorts(self, quarter: str, year: int) -> dict:
+        """
+        Returns {'sal': [...], 'aec': [...], 'file_date': str} from DB,
+        matching the same structure as load_weekly_cohorts() in the page.
+        Returns None if no data found.
+        """
+        with self.get_session() as session:
+            q = session.query(WeeklyCohort).filter_by(
+                quarter=quarter, year=year
+            ).order_by(WeeklyCohort.vertical, WeeklyCohort.week_start)
+            rows = q.all()
+
+        if not rows:
+            return None
+
+        def _to_dict(r):
+            return {
+                'week_start':    r.week_start,
+                'week_label':    r.week_label,
+                'lead_sources':  r.lead_sources or '—',
+                'total_mqls':    r.total_mqls,
+                'icp_mqls':      r.icp_mqls,
+                'icp_pct':       r.icp_pct,
+                'sal_n':         r.sal_n,
+                'mql_sal_pct':   r.mql_sal_pct,
+                'sql_mkt':       r.sql_mkt,
+                'sql_sales':     r.sql_sales,
+                'sql_csm':       r.sql_csm,
+                'sql_total':     r.sql_total,
+                'sal_sql_pct':   r.sal_sql_pct,
+                'pipeline':      r.pipeline,
+                'cum_mqls':      r.cum_mqls,
+                'cum_sals':      r.cum_sals,
+                'cum_sqls_mkt':  r.cum_sqls_mkt,
+                'cum_mql_sal':   r.cum_mql_sal,
+                'cum_sal_sql':   r.cum_sal_sql,
+                'cum_mql_sql':   r.cum_mql_sql,
+            }
+
+        sal = [_to_dict(r) for r in rows if r.vertical == 'SAL']
+        aec = [_to_dict(r) for r in rows if r.vertical == 'AEC']
+
+        latest = max(rows, key=lambda r: r.updated_at)
+        file_date = latest.updated_at.strftime('%b %-d, %Y %-I:%M %p')
+        return {'sal': sal, 'aec': aec, 'file_date': file_date}
 
 
 # Global database instance
