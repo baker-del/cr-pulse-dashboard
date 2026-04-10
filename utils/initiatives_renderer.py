@@ -150,15 +150,9 @@ PROJECTS = [
             "Dual podcast strategy: 'The AI Advantage' (Baker) + 'Relationship Intelligence' (Stephen)",
         ],
         "due_next_30": [
-            {"item": "Publish Blog 1 — 'The Human Edge' on ClearlyRated blog + LinkedIn", "due": "2026-04-07", "owner": "Baker / Stephen"},
-            {"item": "Publish Blog 2 — 'PwC Just Said the Quiet Part Out Loud'", "due": "2026-04-14", "owner": "Baker / Stephen"},
-            {"item": "Publish Blog 3 — 'The Broken Ladder'", "due": "2026-04-21", "owner": "Baker / Stephen"},
-            {"item": "Socialize campaign brief with leadership team", "due": "2026-04-07", "owner": "Baker"},
-            {"item": "Record AI Advantage Episode 1 — Lucas (Unanet)", "due": "2026-04-02", "owner": "Baker"},
-            {"item": "Record AI Advantage Episode 2 — Guido", "due": "2026-04-07", "owner": "Baker"},
-            {"item": "Record AI Advantage Episode 3 — Alex", "due": "2026-04-10", "owner": "Baker"},
-            {"item": "Write Blog 7 — 'Your Clients Are More AI-Savvy Than You Are'", "due": "2026-04-14", "owner": "Baker"},
-            {"item": "Define Relationship Intelligence podcast format + first 3 guests", "due": "2026-04-15", "owner": "Stephen"},
+            {"item": "Publish Blog 4 — 'The 61% Problem'", "due": "2026-04-28", "owner": "Baker / Stephen"},
+            {"item": "Record AI Advantage Episode 4 — Matthew Plinck (Coka)", "due": "2026-04-10", "owner": "Baker"},
+            {"item": "Record AI Advantage Episode 5 — Guido Maciocci (AECFoundry)", "due": "2026-04-17", "owner": "Baker"},
         ],
         "docs": [
             {"label": "📄 Campaign Brief", "url": "https://docs.google.com/document/d/16nXxEA0XnB2uc3rXod0JiSz-OCMLkBK6SBFdEtBeWNA/edit"},
