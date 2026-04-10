@@ -275,13 +275,12 @@ def render_project_card(project):
             unsafe_allow_html=True,
         )
         due_items = project.get("due_next_30", [])
-        if due_items:
+        upcoming = [d for d in due_items if days_until(d.get("due")) is None or days_until(d.get("due")) >= 0]
+        if upcoming:
             due_html = ""
-            for d in due_items:
+            for d in upcoming:
                 days = days_until(d.get("due"))
-                if days is not None and days < 0:
-                    tag = '<span style="color:#c0392b; font-weight:600;">OVERDUE</span>'
-                elif days is not None and days <= 7:
+                if days is not None and days <= 7:
                     tag = f'<span style="color:#b8860b; font-weight:600;">{days}d</span>'
                 elif days is not None:
                     tag = f'<span style="color:#666;">{days}d</span>'
@@ -330,24 +329,6 @@ def render_initiatives(target=None):
     c4.metric("Behind", behind)
 
     st.markdown("---")
-
-    all_overdue = []
-    for p in PROJECTS:
-        for d in p.get("due_next_30", []):
-            days = days_until(d.get("due"))
-            if days is not None and days < 0:
-                all_overdue.append(f'{p["name"]}: {d["item"]} ({d.get("owner", "")}) — due {d["due"]}')
-
-    if all_overdue:
-        overdue_html = "".join(f"<li>{o}</li>" for o in all_overdue)
-        st.markdown(
-            f'<div style="background:#fde8e8; border-left:4px solid #c0392b; padding:10px 16px; '
-            f'border-radius:4px; margin-bottom:16px;">'
-            f'<div style="font-weight:600; color:#c0392b; margin-bottom:4px;">Overdue Items</div>'
-            f'<ul style="font-size:0.82rem; margin:0; padding-left:18px;">{overdue_html}</ul>'
-            f'</div>',
-            unsafe_allow_html=True,
-        )
 
     for project in PROJECTS:
         anchor_id = project["name"].lower().replace(" ", "-").replace("&", "and")
