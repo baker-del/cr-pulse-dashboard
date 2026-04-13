@@ -183,7 +183,7 @@ PROJECTS = [
         ],
         "due_next_30": [],
         "docs": [
-            {"label": "Strategic Target List (XLS)", "url": "https://drive.google.com/file/d/1bO1T3vYCpN4JiaMSuSBux5ZkLRieiuEu/view"},
+            {"label": "Strategic Target List", "url": "https://docs.google.com/spreadsheets/d/1NESoDVQxeDvXIssf2BZs5-PD9q8iQPqoUEDAJU2f020/edit"},
             {"label": "Investor Profiles Folder", "url": "https://drive.google.com/drive/folders/1m2tLl3cWI1RPgZBYR8M32fHOQLURLCH2"},
             {"label": "Moonshot Drive Folder", "url": "https://drive.google.com/drive/folders/1_aFFPut4xXIbV92g5EcbJoPtb1MASD2r"},
             {"label": "Deltek Profile", "url": "https://drive.google.com/file/d/1TKs8mtWaKKhWaSs1fe2Br9LSmshp5EtP/view"},

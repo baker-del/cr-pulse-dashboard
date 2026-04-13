@@ -48,14 +48,18 @@ PROPERTIES = [
     'hs_deal_stage_probability',
     'company_industry_dropdown',
     # Stage entry dates — used for funnel conversion rate calculations
-    'hs_v2_date_entered_qualifiedtobuy',          # SAL: Solution Alignment (Sales Pipeline)
-    'hs_v2_date_entered_decisionmakerboughtin',   # SAL: Demo / Fit (Sales Pipeline)
-    'hs_v2_date_entered_1102698286',              # AEC: Discovery Call (ClientSavvy Pipeline)
-    'hs_v2_date_entered_1102698287',              # AEC: Demo Performed (ClientSavvy Pipeline)
-    'hs_v2_date_entered_1102698288',              # AEC: ROI Call Completed (ClientSavvy Pipeline)
+    'hs_v2_date_entered_qualifiedtobuy',          # 1 - Discovery (Sales Pipeline)
+    'hs_v2_date_entered_decisionmakerboughtin',   # 2 - Solution Alignment (Sales Pipeline)
+    'hs_v2_date_entered_846553',                  # 3 - Technical Review (Sales Pipeline)
+    'hs_v2_date_entered_266892603',               # 4 - Onboarding Overview (Sales Pipeline)
+    'hs_v2_date_entered_contractsent',            # 5 - Vendor of Choice (Sales Pipeline)
+    # Legacy ClientSavvy pipeline stage dates (kept for historical deal analysis)
+    'hs_v2_date_entered_1102698286',              # AEC: Discovery Call (ClientSavvy — retired Apr 2026)
+    'hs_v2_date_entered_1102698287',              # AEC: Demo Performed (ClientSavvy — retired Apr 2026)
+    'hs_v2_date_entered_1102698288',              # AEC: ROI Call Completed (ClientSavvy — retired Apr 2026)
 ]
 
-NEW_LOGO_PIPELINES = ['default', '757781604']
+NEW_LOGO_PIPELINES = ['default']          # Sales Pipeline only (ClientSavvy merged in Apr 2026)
 EXPANSION_PIPELINE = '47062345'
 ALL_PIPELINES = NEW_LOGO_PIPELINES + [EXPANSION_PIPELINE]
 

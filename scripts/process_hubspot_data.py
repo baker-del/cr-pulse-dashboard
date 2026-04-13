@@ -3,12 +3,22 @@
 Process HubSpot deal data and calculate KPIs
 
 Pipeline IDs (confirmed from HubSpot):
-  default        = Sales Pipeline          → New Logo ARR, SQLs
-  757781604      = ClientSavvy Sales Pipeline → New Logo ARR, SQLs
+  default        = Sales Pipeline          → New Logo ARR, SQLs (AEC/Accounting deals merged here Apr 2026)
+  757781604      = ClientSavvy Sales Pipeline → RETIRED Apr 2026, all deals migrated to default
   47062345       = Expansion Pipeline      → Expansion ARR only
   691884922      = Services Pipeline       → Excluded
   10d22554-...   = CS Pipeline (Renewals)  → Excluded
   734782643      = Renewal Pipeline        → Excluded
+
+Sales Pipeline stages (as of Apr 2026):
+  qualifiedtobuy          = 1 - Discovery          (10%)
+  decisionmakerboughtin   = 2 - Solution Alignment (20%)
+  846553                  = 3 - Technical Review   (60%)
+  266892603               = 4 - Onboarding Overview(80%)
+  contractsent            = 5 - Vendor of Choice   (90%)
+  266892604               = 6 - Contract Executed  (100%)
+  closedwon               = Closed Won             (100%)
+  closedlost              = Closed Lost            (0%)
 
 ARR Forecast:
   Uses hs_deal_stage_probability (fetch with --properties) if available.
@@ -35,17 +45,17 @@ ARR Forecast:
     Group 1 — Deals CLOSING in the target quarter (catches ARR, forecast,
               win rates, qualified pipeline regardless of when created):
       - closedate >= Q_start  AND  closedate <= Q_end
-      - pipeline IN [default, 757781604, 47062345]
+      - pipeline IN [default, 47062345]
 
     Group 2 — Deals CLOSING in the NEXT quarter (catches forecast deals
               and pipeline coverage that spans quarter boundaries):
       - closedate >= Q_next_start  AND  closedate <= Q_next_end
-      - pipeline IN [default, 757781604, 47062345]
+      - pipeline IN [default, 47062345]
 
     Group 3 — Deals CREATED in the target quarter (catches SQLs, pipeline
               created even if close date is far in the future):
       - createdate >= Q_start  AND  createdate <= Q_end
-      - pipeline IN [default, 757781604]
+      - pipeline IN [default]
 
     Group 4 — Open Expansion deals closing within 180 days (catches
               Expansion Pipeline KPI):
@@ -73,9 +83,9 @@ from utils.kpi_calculator import calculate_variance, get_quarter_from_date
 
 
 # ── Pipeline constants ─────────────────────────────────────────────────────────
-NEW_LOGO_PIPELINES = ['default', '757781604']   # Sales + ClientSavvy Sales
+NEW_LOGO_PIPELINES = ['default']                # Sales Pipeline only (ClientSavvy merged Apr 2026)
 EXPANSION_PIPELINES = ['47062345']              # Expansion
-SQL_PIPELINES = ['default', '757781604']        # Same as New Logo
+SQL_PIPELINES = ['default']                     # Same as New Logo
 
 # Win rate: only count deals created on or after this date to exclude historical cleanup deals
 # (old CFT/renewal deals from 2023-2024 being marked closed-lost in Q1 2026)
@@ -98,14 +108,16 @@ CLOSED_LOST_STAGES = ['closedlost', '1102698293']
 # Used for ARR forecast when hs_deal_stage_probability is not in the fetched data.
 # Values are 0.0–1.0 (close probability). Closed-lost stages → 0.0 (excluded).
 STAGE_PROBABILITY_MAP = {
-    # Default Sales Pipeline (reverse-engineered from HubSpot weighted amounts)
-    'closedwon':              1.00,
-    'closedlost':             0.00,
-    'qualifiedtobuy':         0.70,   # HubSpot actual: ~70% (previously 40%)
-    'decisionmakerboughtin':  0.90,
-    '846553':                 0.40,   # Early-stage in default pipeline (previously 20%)
-    # ClientSavvy Sales Pipeline (757781604)
-    # NOTE: actual probabilities require hs_deal_stage_probability to be fetched
+    # Sales Pipeline (default) — stages as of Apr 2026
+    'closedwon':              1.00,   # Closed Won
+    'closedlost':             0.00,   # Closed Lost
+    'qualifiedtobuy':         0.10,   # 1 - Discovery
+    'decisionmakerboughtin':  0.20,   # 2 - Solution Alignment
+    '846553':                 0.60,   # 3 - Technical Review
+    '266892603':              0.80,   # 4 - Onboarding Overview
+    'contractsent':           0.90,   # 5 - Vendor of Choice
+    '266892604':              1.00,   # 6 - Contract Executed
+    # ClientSavvy Sales Pipeline (757781604) — RETIRED Apr 2026, kept for historical deals
     '1102698292':             1.00,   # Closed Won
     '1102698293':             0.00,   # Closed Lost
     '1102698286':             0.20,   # Stage 1
