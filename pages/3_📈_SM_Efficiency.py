@@ -658,28 +658,3 @@ with st.expander("✏️ Update S&M Metrics (Manual Entry)"):
             except Exception as e:
                 st.error(f"Error: {e}")
 
-st.markdown("---")
-
-# ── Action Items ──────────────────────────────────────────────────────────────
-st.markdown(
-    '<div style="font-size:1.1rem; font-weight:700; color:#0F7D64; margin-bottom:8px;">'
-    'Win Rate Action Items — Q2 Execution</div>',
-    unsafe_allow_html=True,
-)
-
-actions = [
-    {"#": 1, "Action": "Discovery-first mandate", "Segment": "SAL", "Timeline": "Apr W1", "Owner": "Pete", "Status": "Not started"},
-    {"#": 2, "Action": "20-touch cadence + sequences", "Segment": "SAL", "Timeline": "Apr W2-3", "Owner": "Pete/AE", "Status": "Not started"},
-    {"#": 3, "Action": "Multi-threading (2+ contacts)", "Segment": "SAL", "Timeline": "Apr W4", "Owner": "Pete", "Status": "Not started"},
-    {"#": 4, "Action": "Assign dedicated SAL coach", "Segment": "SAL", "Timeline": "Apr W1", "Owner": "Pete", "Status": "Not started"},
-    {"#": 5, "Action": "SAL vertical focus 80%+", "Segment": "SAL", "Timeline": "Apr W3", "Owner": "Pete/AE", "Status": "Not started"},
-    {"#": 6, "Action": "BDR qualification gate", "Segment": "SAL", "Timeline": "Apr W3", "Owner": "Shannon", "Status": "Not started"},
-    {"#": 7, "Action": "Impact quantification in discovery", "Segment": "AEC", "Timeline": "Apr W1", "Owner": "Pete", "Status": "Not started"},
-    {"#": 8, "Action": "Planning cycle alignment", "Segment": "AEC", "Timeline": "Apr W1", "Owner": "Pete/AEs", "Status": "Not started"},
-    {"#": 9, "Action": "Post-discovery sequence", "Segment": "AEC", "Timeline": "Apr W2", "Owner": "Pete/Bryce", "Status": "Not started"},
-    {"#": 10, "Action": "Transfer SE deals to AEs", "Segment": "AEC", "Timeline": "Apr W1", "Owner": "Pete", "Status": "Not started"},
-    {"#": 11, "Action": "Model deal cycle (Big-D)", "Segment": "AEC", "Timeline": "Apr W2", "Owner": "Pete", "Status": "Not started"},
-]
-
-df_actions = pd.DataFrame(actions)
-st.dataframe(df_actions, use_container_width=True, hide_index=True)
