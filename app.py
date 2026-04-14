@@ -186,29 +186,8 @@ st.sidebar.markdown(
 
 st.sidebar.markdown("---")
 
-# Period selector — compact inline
-col_q, col_y = st.sidebar.columns(2)
-quarter = col_q.selectbox(
-    "Quarter", ["Q1", "Q2", "Q3", "Q4"],
-    index=["Q1", "Q2", "Q3", "Q4"].index(st.session_state.current_quarter),
-    label_visibility="collapsed",
-)
-year = col_y.selectbox(
-    "Year", [2024, 2025, 2026, 2027],
-    index=[2024, 2025, 2026, 2027].index(st.session_state.current_year),
-    label_visibility="collapsed",
-)
-
-st.session_state.current_quarter = quarter
-st.session_state.current_year    = year
-
-st.sidebar.markdown(
-    f'<div style="background:rgba(198,255,126,0.12); border:1px solid rgba(198,255,126,0.3); '
-    f'border-radius:6px; padding:8px 12px; margin:8px 0; text-align:center;">'
-    f'<span style="font-size:0.9rem; font-weight:600; color:#C6FF7E;">{quarter} {year}</span>'
-    f'</div>',
-    unsafe_allow_html=True,
-)
+quarter = st.session_state.current_quarter
+year    = st.session_state.current_year
 
 # ── User info + logout ───────────────────────────────────────────────────────────
 user = current_user()
