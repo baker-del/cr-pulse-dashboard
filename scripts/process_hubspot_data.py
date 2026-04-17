@@ -368,11 +368,13 @@ def process_hubspot_deals(deals_data, quarter="Q1", year=2026):
         # ── SQLs ──────────────────────────────────────────────────────────
         # Created this quarter, in Sales or ClientSavvy Sales pipeline,
         # discovery_status = "Completed" (labeled "Completed (Qualified)")
-        # deal_source_bucket: blank or "Marketing Driven" → attributed to MQL funnel
-        #                     "Sales Driven" / "CSM Driven" → excluded from MQL→SQL
-        is_marketing_sql = source_bucket in ('Marketing Driven', '')
+        # deal_source_bucket: assume marketing unless explicitly "Sales Driven"
+        #   "Sales Driven" → sales-attributed
+        #   "CSM Driven"   → CSM-attributed
+        #   anything else (blank, "Marketing Driven", unknown) → marketing
         is_sales_sql     = source_bucket == 'Sales Driven'
         is_csm_sql       = source_bucket == 'CSM Driven'
+        is_marketing_sql = not is_sales_sql and not is_csm_sql
         if q1_create and pipeline in SQL_PIPELINES and discovery == 'Completed':
             sqls_total += 1
             if lead_type in ('Outbound', 'Outbound*'):
