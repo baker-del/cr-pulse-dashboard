@@ -22,6 +22,35 @@ def days_until(d_str):
 
 PROJECTS = [
     {
+        "name": "100% NRR",
+        "tagline": "CS transformation — from retention to expansion. Crawl → Walk → Run to 130%+ NRR.",
+        "owner": "Baker / Eric Gregg",
+        "status": "On Track",
+        "phase": "Crawl (Now–Q2): GRR 90% + CX Assessment offer defined. Walk starts Q3.",
+        "updates": [
+            "Crawl/Walk/Run model defined: Crawl = GRR 90%, Walk = NRR 100%, Run = 130%+ by 2027",
+            "CX Assessment = expansion offer — CSMs become CX Maturity Partners, not just retention managers",
+            "7 CX assessments completed: 1 GREEN (Medicus pilot live), 5 YELLOW, 1 RED",
+            "Expansion pipeline: $237K (177% of paced Q2 target of $134K)",
+            "Two anchor expansion deals: HDR $132K (Ryanne, Stage 1), Parkhill $60K (Stage 1)",
+            "CS team: Eric Gregg + 7 CSMs. Strategic tier: Scheri, Zach Hankin, Amber (30–40 accounts each)",
+        ],
+        "due_next_30": [
+            {"item": "Finalize CX Assessment operational plan + expansion offer menu", "due": "2026-04-30", "owner": "Eric / Hina"},
+            {"item": "HDR $132K expansion — advance to Stage 2", "due": "2026-05-15", "owner": "Ryanne / Zach"},
+            {"item": "Parkhill $60K expansion — advance to Stage 2", "due": "2026-05-15", "owner": "Eric"},
+            {"item": "Top 30 accounts — CX Assessment scheduling complete", "due": "2026-06-30", "owner": "Eric / Hina"},
+        ],
+        "docs": [
+            {"label": "📁 NRR 100% Drive Folder", "url": "https://drive.google.com/drive/folders/1b4TaDnt2eLcp9bFEXTHtu1mb7AalgzeO"},
+            {"label": "📊 Strategy Slides", "url": "https://docs.google.com/presentation/d/1LGHSnMWmjh1K3r46hyLIKu2_Gx8wPvV4/edit"},
+            {"label": "📋 Eric's Q2 CS Plan", "url": "https://docs.google.com/document/d/1JZ3xN2aYFZgSP-iZsVgHODQUwlsZa4Ov/edit"},
+            {"label": "📈 ARR Build Model", "url": "https://docs.google.com/spreadsheets/d/12W3S7jhYlyeaqbeu3WjHAFsr6Wd6LMnbfBRFnB8J5Dg/edit"},
+            {"label": "📄 Wayfinder Board Doc", "url": "https://docs.google.com/document/d/1mYErZVWgPM5MiAKGwKVAvebD9tWW3g2a_5oE3Cm7iBg/edit"},
+            {"label": "📝 Wayfinder Call Learnings", "url": "https://docs.google.com/document/d/1Gkg1aQgafkhimfvFnMRiKlXeRYTNkaKoqtJ2KnP9ko4/edit"},
+        ],
+    },
+    {
         "name": "Wayfinder",
         "tagline": "Path to 100% NRR — journey CX expansion in staffing",
         "owner": "Baker / Eric / Hina",
