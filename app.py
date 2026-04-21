@@ -143,6 +143,7 @@ pg = st.navigation(
             st.Page("pages/3_📈_SM_Efficiency.py", title="S&M Efficiency", icon="📈"),
         ],
         "STRATEGY": [
+            st.Page("pages/strat_nrr100.py",       title="100% NRR",       icon="📈"),
             st.Page("pages/strat_wayfinder.py",    title="Wayfinder",      icon="🧭"),
             st.Page("pages/strat_sm.py",           title="S&M Efficiency", icon="📊"),
             st.Page("pages/strat_profitability.py",title="Profitability",  icon="💰"),
