@@ -36,10 +36,8 @@ PROJECTS = [
             "CS team: Eric Gregg + 7 CSMs. Strategic tier: Scheri, Zach Hankin, Amber (30–40 accounts each)",
         ],
         "due_next_30": [
-            {"item": "Finalize CX Assessment operational plan + expansion offer menu", "due": "2026-04-30", "owner": "Eric / Hina"},
-            {"item": "HDR $132K expansion — advance to Stage 2", "due": "2026-05-15", "owner": "Ryanne / Zach"},
-            {"item": "Parkhill $60K expansion — advance to Stage 2", "due": "2026-05-15", "owner": "Eric"},
-            {"item": "Top 30 accounts — CX Assessment scheduling complete", "due": "2026-06-30", "owner": "Eric / Hina"},
+            {"item": "NRR 100% plan finalized", "due": "2026-04-25", "owner": "Baker / Eric"},
+            {"item": "Plan operational", "due": "2026-05-15", "owner": "Baker / Eric"},
         ],
         "docs": [
             {"label": "📄 CXNext 2026", "url": "https://docs.google.com/document/d/1QmUaIkb_n4F3SiHKYXY16fYZ-O27bvN0QTJBZe5rqhY/edit"},
