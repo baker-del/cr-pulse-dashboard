@@ -8,6 +8,7 @@ Setup (one-time):
   4. Copy Client ID and Secret into .env (see .env.example)
 """
 
+import hashlib
 import json
 import os
 import time
@@ -21,8 +22,15 @@ from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 
 # ── Config ──────────────────────────────────────────────────────────────────────
-_ENV_PATH = Path(__file__).parent.parent / ".env"
-_TOKEN_PATH = Path(__file__).parent.parent / ".auth_token.json"
+_ENV_PATH   = Path(__file__).parent.parent / ".env"
+_TOKEN_DIR  = Path(__file__).parent.parent / ".auth_tokens"
+
+
+def _token_path(email: str) -> Path:
+    """Return a per-user token file path keyed by email hash."""
+    _TOKEN_DIR.mkdir(exist_ok=True)
+    h = hashlib.sha256(email.lower().encode()).hexdigest()[:16]
+    return _TOKEN_DIR / f".token_{h}.json"
 
 GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
@@ -52,38 +60,44 @@ def _is_allowed_email(email: str) -> bool:
 
 # ── Token persistence ────────────────────────────────────────────────────────────
 def _save_token(email: str, name: str, picture: str):
-    """Save auth token to disk for 30-day persistence."""
+    """Save per-user auth token to disk for 30-day persistence."""
     data = {
         "email": email,
         "name": name,
         "picture": picture,
         "created_at": time.time(),
     }
-    _TOKEN_PATH.write_text(json.dumps(data))
+    _token_path(email).write_text(json.dumps(data))
 
 
 def _load_token() -> dict | None:
-    """Load saved token if it exists and hasn't expired (30 days)."""
-    if not _TOKEN_PATH.exists():
+    """Restore session from a saved token using the email stored in session state."""
+    email = st.session_state.get("user_email", "")
+    if not email:
+        return None
+    path = _token_path(email)
+    if not path.exists():
         return None
     try:
-        data = json.loads(_TOKEN_PATH.read_text())
+        data = json.loads(path.read_text())
         age = time.time() - data.get("created_at", 0)
         if age > TOKEN_MAX_AGE:
-            _TOKEN_PATH.unlink(missing_ok=True)
+            path.unlink(missing_ok=True)
             return None
         if not _is_allowed_email(data.get("email", "")):
-            _TOKEN_PATH.unlink(missing_ok=True)
+            path.unlink(missing_ok=True)
             return None
         return data
     except (json.JSONDecodeError, KeyError):
-        _TOKEN_PATH.unlink(missing_ok=True)
+        path.unlink(missing_ok=True)
         return None
 
 
 def _clear_token():
-    """Remove saved token file."""
-    _TOKEN_PATH.unlink(missing_ok=True)
+    """Remove the current user's saved token file."""
+    email = st.session_state.get("user_email", "")
+    if email:
+        _token_path(email).unlink(missing_ok=True)
 
 
 # ── Helpers ─────────────────────────────────────────────────────────────────────

@@ -1,6 +1,7 @@
 # Credentials — never commit these
 google_credentials.json
 .auth_token.json
+.auth_tokens/
 .env
 
 # HubSpot data dumps
