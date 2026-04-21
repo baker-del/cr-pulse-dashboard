@@ -27,14 +27,7 @@ PROJECTS = [
         "owner": "Baker / Eric Gregg",
         "status": "On Track",
         "phase": "Crawl (Now–Q2): GRR 90% + CX Assessment offer defined. Walk starts Q3.",
-        "updates": [
-            "Crawl/Walk/Run model defined: Crawl = GRR 90%, Walk = NRR 100%, Run = 130%+ by 2027",
-            "CX Assessment = expansion offer — CSMs become CX Maturity Partners, not just retention managers",
-            "7 CX assessments completed: 1 GREEN (Medicus pilot live), 5 YELLOW, 1 RED",
-            "Expansion pipeline: $237K (177% of paced Q2 target of $134K)",
-            "Two anchor expansion deals: HDR $132K (Ryanne, Stage 1), Parkhill $60K (Stage 1)",
-            "CS team: Eric Gregg + 7 CSMs. Strategic tier: Scheri, Zach Hankin, Amber (30–40 accounts each)",
-        ],
+        "updates": [],
         "due_next_30": [
             {"item": "NRR 100% plan finalized", "due": "2026-04-25", "owner": "Baker / Eric"},
             {"item": "Plan operational", "due": "2026-05-15", "owner": "Baker / Eric"},
