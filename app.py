@@ -149,6 +149,7 @@ pg = st.navigation(
             st.Page("pages/strat_profitability.py",title="Profitability",  icon="💰"),
             st.Page("pages/strat_prism.py",        title="PRISM",          icon="🔮"),
             st.Page("pages/strat_human_edge.py",   title="The Human Edge", icon="🎙️"),
+            st.Page("pages/strat_partnerships.py", title="Strategic Partnerships", icon="🤝"),
             st.Page("pages/strat_moonshot.py",     title="Moonshot",       icon="🚀"),
         ],
         "ADMIN": [
