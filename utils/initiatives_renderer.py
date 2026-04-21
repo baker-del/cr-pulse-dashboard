@@ -42,12 +42,9 @@ PROJECTS = [
             {"item": "Top 30 accounts — CX Assessment scheduling complete", "due": "2026-06-30", "owner": "Eric / Hina"},
         ],
         "docs": [
-            {"label": "📁 NRR 100% Drive Folder", "url": "https://drive.google.com/drive/folders/1b4TaDnt2eLcp9bFEXTHtu1mb7AalgzeO"},
-            {"label": "📊 Strategy Slides", "url": "https://docs.google.com/presentation/d/1LGHSnMWmjh1K3r46hyLIKu2_Gx8wPvV4/edit"},
-            {"label": "📋 Eric's Q2 CS Plan", "url": "https://docs.google.com/document/d/1JZ3xN2aYFZgSP-iZsVgHODQUwlsZa4Ov/edit"},
-            {"label": "📈 ARR Build Model", "url": "https://docs.google.com/spreadsheets/d/12W3S7jhYlyeaqbeu3WjHAFsr6Wd6LMnbfBRFnB8J5Dg/edit"},
-            {"label": "📄 Wayfinder Board Doc", "url": "https://docs.google.com/document/d/1mYErZVWgPM5MiAKGwKVAvebD9tWW3g2a_5oE3Cm7iBg/edit"},
-            {"label": "📝 Wayfinder Call Learnings", "url": "https://docs.google.com/document/d/1Gkg1aQgafkhimfvFnMRiKlXeRYTNkaKoqtJ2KnP9ko4/edit"},
+            {"label": "📄 CXNext 2026", "url": "https://docs.google.com/document/d/1QmUaIkb_n4F3SiHKYXY16fYZ-O27bvN0QTJBZe5rqhY/edit"},
+            {"label": "📈 100% NRR Model", "url": "https://docs.google.com/spreadsheets/d/1RM3-uzBlYPboXojge0DH_mPbLEM7B9E9s8TlEv1u8i0/edit"},
+            {"label": "📁 Drive Folder", "url": "https://drive.google.com/drive/folders/1b4TaDnt2eLcp9bFEXTHtu1mb7AalgzeO"},
         ],
     },
     {
@@ -156,6 +153,7 @@ PROJECTS = [
             {"item": "P4 Feedback Insights Generator — build + CSM validation", "due": "2026-04-14", "owner": "Hina / Jorgen"},
         ],
         "docs": [
+            {"label": "Prism - Hypothesis Validation", "url": "https://docs.google.com/document/d/1ry-0GNK7QKBj-lq4pxcI-JPcqX6yu-2JrO3wfB-2Wpw/edit?tab=t.0#heading=h.2y6bc7m3luc"},
             {"label": "Prototype Q2 Shortlist (Confluence)", "url": "https://clearlyrated.atlassian.net/wiki/spaces/PT/pages/2897084422/Prism+Prototype+Ideas+Q2+Shortlist"},
             {"label": "The Human Edge Campaign Brief", "url": "https://docs.google.com/document/d/16nXxEA0XnB2uc3rXod0JiSz-OCMLkBK6SBFdEtBeWNA/edit"},
             {"label": "PRISM Initiative Folder", "url": "#", "local": "AI Assistant/projects/prism/"},
