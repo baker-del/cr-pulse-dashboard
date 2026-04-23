@@ -27,8 +27,8 @@ CREDS_PATH  = PROJECT_DIR.parent.parent / "credentials" / "gdrive_token.json"
 DB_PATH     = PROJECT_DIR / "database" / "kpi_dashboard.db"
 ENV_PATH    = PROJECT_DIR / ".env"
 
-# Drive folder: S&M Efficiency
-DRIVE_FOLDER = "1TJDJIZFcnhrrd419gkTdPfbgDuwljLmy"
+# Drive folder: S&M Efficiency Weekly Reports
+DRIVE_FOLDER = "1kNxXPsyJGAV4Cbgv2NSXoqnxLCysN1t-"
 
 # ── Quarter constants ────────────────────────────────────────────────────────────
 QUARTER     = "Q2"
@@ -521,7 +521,17 @@ def create_google_doc(title: str, mql_rows: list, sal_rows: list,
     SAL_MARKER = "~~SAL_TABLE~~"
     AEC_MARKER = "~~AEC_TABLE~~"
 
-    # ── 1. Create doc, insert text skeleton ──────────────────────────────────
+    # ── 1. Check for existing doc this week (avoid duplicates) ───────────────
+    existing = drive.files().list(
+        q=f"name='{title}' and '{DRIVE_FOLDER}' in parents and trashed=false",
+        fields="files(id,name)",
+    ).execute().get("files", [])
+    if existing:
+        url = f"https://docs.google.com/document/d/{existing[0]['id']}/edit"
+        print(f"  ✓ Report already exists for this week — returning existing doc")
+        return url
+
+    # ── 2. Create doc, insert text skeleton ──────────────────────────────────
     doc = docs.documents().create(body={"title": title}).execute()
     doc_id = doc["documentId"]
     drive.files().update(
@@ -553,7 +563,7 @@ def create_google_doc(title: str, mql_rows: list, sal_rows: list,
     ]}).execute()
     time.sleep(0.5)
 
-    # ── 2. Insert tables bottom-to-top (AEC → SAL → MQL) ─────────────────────
+    # ── 3. Insert tables bottom-to-top (AEC → SAL → MQL) ─────────────────────
     HEADERS = ["Metric", "Actual", "Pace Target", "% to Pace", "Status"]
 
     def make_matrix(rows):
