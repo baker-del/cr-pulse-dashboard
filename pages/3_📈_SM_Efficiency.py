@@ -134,8 +134,17 @@ def calc_status(actual, target, format_type, inverse=False):
 
 
 # ── Header ────────────────────────────────────────────────────────────────────
-st.title("📈 S&M Efficiency — Weekly Review")
-st.caption(f"{QUARTER} {YEAR} · Target: 0.65x S&M efficiency by end of 2026 · Updated {date.today().strftime('%B %-d, %Y')}")
+_h1, _h2 = st.columns([8, 1])
+with _h1:
+    st.title("📈 S&M Efficiency — Weekly Review")
+    st.caption(f"{QUARTER} {YEAR} · Target: 0.65x S&M efficiency by end of 2026 · Updated {date.today().strftime('%B %-d, %Y')}")
+with _h2:
+    st.write("")
+    if st.button("🔄 Refresh", use_container_width=True, key="sm_refresh"):
+        import database.db as _db_mod
+        _db_mod._db_instance = None
+        load_weekly_cohorts.clear()
+        st.rerun()
 
 # Links
 st.markdown(

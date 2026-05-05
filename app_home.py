@@ -7,7 +7,7 @@ from datetime import datetime
 from pathlib import Path
 from database.db import get_db
 
-quarter = st.session_state.get('current_quarter', 'Q1')
+quarter = st.session_state.get('current_quarter', 'Q2')
 year    = st.session_state.get('current_year', 2026)
 
 _logo = Path(__file__).parent / "assets" / "pulse-logo.png"

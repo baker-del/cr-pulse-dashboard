@@ -21,6 +21,7 @@ from datetime import date
 
 import pandas as pd
 import requests
+import yaml
 from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).parent.parent / ".env")
@@ -36,6 +37,18 @@ SHEET_GID      = 1991609223
 SHEET_PUBLIC   = False
 
 CREDENTIALS_FILE = Path(__file__).parent.parent / "google_credentials.json"
+TARGETS_FILE     = Path(__file__).parent.parent / "config" / "targets.yaml"
+
+
+def _load_retention_targets(quarter: str) -> dict:
+    """Load GRR/NRR targets from targets.yaml for the given quarter."""
+    try:
+        with open(TARGETS_FILE) as f:
+            cfg = yaml.safe_load(f)
+        return cfg.get(quarter, {}).get("retention_kpis", {})
+    except Exception:
+        return {}
+
 
 # Sheet layout (first tab — Retention Risk Analysis-Feb2026):
 #   H2  = Implied Logo Retention (%)   H3  = Implied GRR (%)
@@ -44,18 +57,24 @@ CREDENTIALS_FILE = Path(__file__).parent.parent / "google_credentials.json"
 #   Risk reasons rows 41-52 (counts):
 #     D42 = Low surveys, D47 = Product, D48 = Support, D49 = Response rate
 
-# (cell_address, kpi_name, owner, target, cadence)
-CELL_KPI_MAP = [
-    ("H2",  "Logo Retention",                        "CS", "95%", "Monthly"),
-    ("H3",  "GRR",                                   "CS", "90%", "Monthly"),
-    ("D35", "High Risk Account ARR (Next 6 Months)", "CS", "",    "Monthly"),
-    ("D35", "ARR at Risk - All Product Issues",      "CS", "",    "Monthly"),
-    ("D24", "High Risk Accounts (Next 6 Months)",    "CS", "",    "Monthly"),
-    ("D42", "Account Risk - Low Surveys Sent",       "CS", "",    "Monthly"),
-    ("D47", "Account Risk - Product Issues",         "CS", "",    "Monthly"),
-    ("D48", "Account Risk - Support Issues",         "CS", "",    "Monthly"),
-    ("D49", "Account Risk - Response Rate Issues",   "CS", "",    "Monthly"),
+# (cell_address, kpi_name, owner, cadence) — targets loaded dynamically from targets.yaml
+CELL_KPI_MAP_BASE = [
+    ("H2",  "Logo Retention",                        "CS", "Monthly"),
+    ("H3",  "GRR",                                   "CS", "Monthly"),
+    ("D35", "High Risk Account ARR (Next 6 Months)", "CS", "Monthly"),
+    ("D35", "ARR at Risk - All Product Issues",      "CS", "Monthly"),
+    ("D24", "High Risk Accounts (Next 6 Months)",    "CS", "Monthly"),
+    ("D42", "Account Risk - Low Surveys Sent",       "CS", "Monthly"),
+    ("D47", "Account Risk - Product Issues",         "CS", "Monthly"),
+    ("D48", "Account Risk - Support Issues",         "CS", "Monthly"),
+    ("D49", "Account Risk - Response Rate Issues",   "CS", "Monthly"),
 ]
+
+# Fallback targets if not in targets.yaml
+DEFAULT_TARGETS = {
+    "Logo Retention": "95%",
+    "GRR":            "90%",
+}
 
 ARR_RISK_KPI_NAME = "ARR at Risk - All Product Issues"  # kept for reference
 
@@ -126,7 +145,14 @@ def fetch_values(quarter: str = "Q1", year: int = 2026) -> int:
     today = date.today()
     saved = 0
 
-    for cell_addr, kpi_name, owner, target, cadence in CELL_KPI_MAP:
+    retention_targets = _load_retention_targets(quarter)
+
+    cell_kpi_map = [
+        (addr, name, owner, retention_targets.get(name, DEFAULT_TARGETS.get(name, "")), cadence)
+        for addr, name, owner, cadence in CELL_KPI_MAP_BASE
+    ]
+
+    for cell_addr, kpi_name, owner, target, cadence in cell_kpi_map:
         raw = _cell_value(df, cell_addr)
         if not raw:
             print(f"  SKIP  {kpi_name}: cell {cell_addr} is empty")

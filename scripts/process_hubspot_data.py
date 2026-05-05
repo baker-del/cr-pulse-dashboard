@@ -294,6 +294,7 @@ def process_hubspot_deals(deals_data, quarter="Q1", year=2026):
     # Exclude known test deals
     EXCLUDED_DEALS = {
         'affiliated engineers - as testing',
+        'test - tdd',
     }
 
     for deal in deals_data:

@@ -230,8 +230,12 @@ def clean_actual(raw: str) -> str:
 
 
 # ── Header ─────────────────────────────────────────────────────────────────────
-quarter = st.session_state.get('current_quarter', 'Q1')
+quarter = st.session_state.get('current_quarter', 'Q2')
 year    = st.session_state.get('current_year', 2026)
+
+# Version stamp — incrementing forces data_editor keys to change, busting browser widget cache
+if 'tbl_v' not in st.session_state:
+    st.session_state['tbl_v'] = 0
 
 col_title, col_add, col_btn = st.columns([5, 1, 1])
 with col_title:
@@ -243,6 +247,9 @@ with col_add:
 with col_btn:
     st.write("")
     if st.button("🔄 Refresh", use_container_width=True):
+        import database.db as _db_mod
+        _db_mod._db_instance = None
+        st.session_state['tbl_v'] = st.session_state.get('tbl_v', 0) + 1
         st.rerun()
 
 st.markdown("---")
@@ -375,7 +382,8 @@ if status_filter and not filtered.empty:
 # ── Section renderer ───────────────────────────────────────────────────────────
 def render_section(key: str, kpi_names: list, kpis_df: pd.DataFrame, fallback_df: pd.DataFrame = None):
     """Render an editable KPI table for a priority group."""
-    table_key  = f'tbl_{key}'
+    v = st.session_state.get('tbl_v', 0)
+    table_key  = f'tbl_{key}_v{v}'
     section_df = kpis_df[kpis_df['kpi_name'].isin(kpi_names)].copy() if not kpis_df.empty else pd.DataFrame()
     existing   = {row['kpi_name']: row for _, row in section_df.iterrows()}
 
@@ -581,8 +589,8 @@ def render_section(key: str, kpi_names: list, kpis_df: pd.DataFrame, fallback_df
         for err in errors:
             st.error(err)
         if saved > 0:
-            if table_key in st.session_state:
-                del st.session_state[table_key]
+            # Bump version so the data_editor gets a fresh key — purges browser widget cache
+            st.session_state['tbl_v'] = st.session_state.get('tbl_v', 0) + 1
             st.toast(f"✅ Auto-saved {saved} change{'s' if saved > 1 else ''}", icon="✅")
             st.rerun()
 

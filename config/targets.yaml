@@ -30,6 +30,9 @@ Q1:
 
 Q2:
   year: 2026
+  retention_kpis:
+    GRR: "88%"
+    NRR: "90%"
   hubspot_kpis:
     Total New ARR Forecast:             "525363"    # NL $471,863 + Exp $53,500
     New Logo ARR:                       "471863"

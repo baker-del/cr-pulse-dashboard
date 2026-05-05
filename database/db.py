@@ -9,6 +9,7 @@ from datetime import datetime, date
 from sqlalchemy import create_engine, Column, Integer, String, Float, Date, DateTime, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import NullPool
 from typing import List, Dict, Optional
 import pandas as pd
 
@@ -204,7 +205,13 @@ class Database:
             db_path = os.path.join(os.path.dirname(__file__), 'kpi_dashboard.db')
             db_url = f'sqlite:///{db_path}'
 
-        self.engine = create_engine(db_url, echo=False, pool_pre_ping=True)
+        is_sqlite = db_url.startswith('sqlite')
+        engine_kwargs = {'echo': False}
+        if is_sqlite:
+            engine_kwargs['poolclass'] = NullPool
+        else:
+            engine_kwargs['pool_pre_ping'] = True
+        self.engine = create_engine(db_url, **engine_kwargs)
         self.SessionLocal = sessionmaker(autocommit=False, autoflush=False,
                                          expire_on_commit=True, bind=self.engine)
 
@@ -247,10 +254,12 @@ class Database:
             session.close()
 
     def save_kpi_if_changed(self, kpi_data: Dict) -> Optional[KPI]:
-        """Save KPI only when actual_value is present and differs from the latest stored value.
+        """Upsert a KPI value: update the existing row in-place if value changed, insert if new.
 
-        Returns the saved KPI record, or None if skipped (no data / unchanged).
-        This preserves the original 'date' (Last Updated) when no new data exists.
+        One row per kpi_name/quarter/year — no historical duplicates. The date column
+        reflects when the value was last updated.
+
+        Returns the updated/inserted KPI record, or None if skipped (no data / unchanged).
         """
         # Refuse updates to locked (snapshotted) quarters
         q = kpi_data.get('quarter')
@@ -264,22 +273,33 @@ class Database:
         if not actual or actual in ('None', 'nan'):
             return None
 
-        # Compare against the latest stored value for this KPI/quarter/year
         session = self.get_session()
         try:
-            latest = session.query(KPI).filter(
+            # Find the single canonical row for this KPI/quarter/year
+            existing = session.query(KPI).filter(
                 KPI.kpi_name == kpi_data['kpi_name'],
                 KPI.quarter  == kpi_data.get('quarter'),
                 KPI.year     == kpi_data.get('year'),
             ).order_by(KPI.date.desc(), KPI.id.desc()).first()
 
             target = str(kpi_data.get('target_value', '') or '').strip()
-            if latest and str(latest.actual_value or '').strip() == actual \
-                    and str(latest.target_value or '').strip() == target:
-                return None  # Value unchanged — leave existing record and date intact
+            if existing:
+                if str(existing.actual_value or '').strip() == actual \
+                        and str(existing.target_value or '').strip() == target:
+                    return None  # Unchanged — leave row intact
+
+                # Value changed: update in place (no new row)
+                for field in ('actual_value', 'target_value', 'status', 'variance_pct',
+                              'source', 'comments', 'date', 'updated_by'):
+                    if field in kpi_data:
+                        setattr(existing, field, kpi_data[field])
+                session.commit()
+                session.refresh(existing)
+                return existing
         finally:
             session.close()
 
+        # No existing row — insert fresh
         return self.save_kpi(kpi_data)
 
     def save_kpi(self, kpi_data: Dict) -> KPI:

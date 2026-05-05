@@ -74,7 +74,7 @@ st.info("""
 
 Since you're running this app locally, HubSpot data sync happens through Claude:
 
-1. Ask Claude to sync HubSpot data: "Refresh HubSpot KPIs for Q1 2026"
+1. Ask Claude to sync HubSpot data: "Refresh HubSpot KPIs for Q2 2026"
 2. Claude will use HubSpot MCP tools to fetch deal data
 3. Claude will process the data using existing scripts
 4. Claude will save the calculated KPIs to the database
@@ -97,7 +97,7 @@ if st.button("📥 Request HubSpot Sync"):
     st.info("""
     To sync HubSpot data, please ask Claude:
 
-    **"Please sync HubSpot KPIs for Q1 2026 and save to the database"**
+    **"Please sync HubSpot KPIs for Q2 2026 and save to the database"**
 
     Claude will:
     1. Fetch deal data from HubSpot using MCP tools
@@ -152,7 +152,7 @@ if not creds_exist:
         `your-service@your-project.iam.gserviceaccount.com`
         """)
 
-quarter_gs = st.session_state.get('current_quarter', 'Q1')
+quarter_gs = st.session_state.get('current_quarter', 'Q2')
 year_gs    = st.session_state.get('current_year', 2026)
 
 if st.button("📊 Sync Google Sheet KPIs Now", disabled=not creds_exist):
@@ -268,7 +268,7 @@ col1, col2 = st.columns(2)
 with col1:
     st.markdown("**Export All KPIs**")
 
-    quarter = st.session_state.get('current_quarter', 'Q1')
+    quarter = st.session_state.get('current_quarter', 'Q2')
     year = st.session_state.get('current_year', 2026)
 
     kpis_df = db.get_latest_kpis(quarter, year)
@@ -317,7 +317,7 @@ with col_ai1:
     st.markdown("""
     **Import action items from ClearlyRated team sheet**
 
-    Loads the 26 action items from the Q1 2026 team sheet into the database.
+    Loads the action items from the Q2 2026 team sheet into the database.
     Safe to re-run — skips items that already exist.
     """)
 
