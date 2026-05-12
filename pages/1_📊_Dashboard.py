@@ -7,8 +7,13 @@ import re
 import streamlit as st
 import pandas as pd
 from datetime import date
-from database.db import get_db
+from database.db import get_db, DASHBOARD_HIDDEN_KPIS
 from utils.kpi_calculator import calculate_variance, is_inverse_kpi, calculate_pace_status
+
+
+def _visible_kpis(kpi_list):
+    """Drop globally-hidden KPIs from a priority-group list before render."""
+    return [k for k in kpi_list if k not in DASHBOARD_HIDDEN_KPIS]
 
 
 # ── Priority groups ─────────────────────────────────────────────────────────────
@@ -869,12 +874,12 @@ tabs = st.tabs(tab_labels)
 with tabs[0]:  # All KPIs tab — show each priority group as a subsection
     for key, group in PRIORITY_GROUPS.items():
         st.subheader(group['label'])
-        render_section(f'all_{key}', group['kpis'], filtered, fallback_df)
+        render_section(f'all_{key}', _visible_kpis(group['kpis']), filtered, fallback_df)
         st.markdown("")
 
 for tab, (key, group) in zip(tabs[1:], PRIORITY_GROUPS.items()):
     with tab:
-        render_section(key, group['kpis'], filtered, fallback_df)
+        render_section(key, _visible_kpis(group['kpis']), filtered, fallback_df)
 
 st.markdown("---")
 
