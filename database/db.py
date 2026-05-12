@@ -301,13 +301,20 @@ class Database:
                 KPI.year     == kpi_data.get('year'),
             ).order_by(KPI.date.desc(), KPI.id.desc()).first()
 
-            target = str(kpi_data.get('target_value', '') or '').strip()
+            target   = str(kpi_data.get('target_value', '') or '').strip()
+            comments = str(kpi_data.get('comments',     '') or '').strip()
+            status   = str(kpi_data.get('status',       '') or '').strip()
             if existing:
+                # Compare meaningful fields. Comments and status are included so
+                # forecast strings and pace-driven status stay fresh even when
+                # the actual_value hasn't moved.
                 if str(existing.actual_value or '').strip() == actual \
-                        and str(existing.target_value or '').strip() == target:
-                    return None  # Unchanged — leave row intact
+                        and str(existing.target_value or '').strip() == target \
+                        and str(existing.comments     or '').strip() == comments \
+                        and str(existing.status       or '').strip() == status:
+                    return None  # Truly unchanged — leave row intact
 
-                # Value changed: update in place (no new row)
+                # Something changed: update in place (no new row)
                 for field in ('actual_value', 'target_value', 'status', 'variance_pct',
                               'source', 'comments', 'date', 'updated_by'):
                     if field in kpi_data:
