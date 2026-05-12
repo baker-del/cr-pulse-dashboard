@@ -701,15 +701,18 @@ def render_exec_summary(df, quarter, year, pct_elapsed, days_left):
     with m1:
         if total_forecast is not None and total_target:
             pct = total_forecast / total_target * 100
-            st.metric("ARR Forecast", f"${total_forecast:,.0f}", f"{pct:.0f}% of target")
+            st.metric("ARR Forecast", f"${total_forecast:,.0f}", f"{pct:.0f}% of target",
+                      delta_color="inverse" if total_forecast < total_target else "normal")
     with m2:
         if nl_arr is not None:
             delta = f"{nl_arr/nl_target*100:.0f}% of target" if nl_target else ""
-            st.metric("New Logo ARR", f"${nl_arr:,.0f}", delta)
+            st.metric("New Logo ARR", f"${nl_arr:,.0f}", delta,
+                      delta_color="inverse" if nl_target and nl_arr < nl_target else "normal")
     with m3:
         if pipeline is not None:
             delta = f"{pipeline/pipeline_target*100:.0f}% of target" if pipeline_target else ""
-            st.metric("Pipeline Created", f"${pipeline:,.0f}", delta)
+            st.metric("Pipeline Created", f"${pipeline:,.0f}", delta,
+                      delta_color="inverse" if pipeline_target and pipeline < pipeline_target else "normal")
     with m4:
         if wr_overall is not None:
             delta = f"Target: {wr_target:.0f}%" if wr_target else ""
@@ -718,7 +721,8 @@ def render_exec_summary(df, quarter, year, pct_elapsed, days_left):
     with m5:
         if sqls is not None:
             delta = f"{sqls/sql_target*100:.0f}% of {int(sql_target)}" if sql_target else ""
-            st.metric("SQLs", f"{int(sqls)}", delta)
+            st.metric("SQLs", f"{int(sqls)}", delta,
+                      delta_color="inverse" if sql_target and sqls < sql_target else "normal")
 
     # ROW 2: Retention & Expansion
     st.markdown(
@@ -745,11 +749,13 @@ def render_exec_summary(df, quarter, year, pct_elapsed, days_left):
     with r4:
         if exp_arr is not None:
             delta = f"{exp_arr/exp_target*100:.0f}% of target" if exp_target else ""
-            st.metric("Expansion ARR", f"${exp_arr:,.0f}", delta)
+            st.metric("Expansion ARR", f"${exp_arr:,.0f}", delta,
+                      delta_color="inverse" if exp_target and exp_arr < exp_target else "normal")
     with r5:
         if acv is not None:
             delta = f"Target: ${acv_target:,.0f}" if acv_target else ""
-            st.metric("ACV (Median)", f"${acv:,.0f}", delta)
+            st.metric("ACV (Median)", f"${acv:,.0f}", delta,
+                      delta_color="inverse" if acv_target and acv < acv_target else "normal")
 
     # ── Plain-language narrative (bullet list, consistent formatting) ────
     bullets = []
