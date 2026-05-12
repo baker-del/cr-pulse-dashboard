@@ -84,27 +84,14 @@ PRIORITY_GROUPS = {
     },
 }
 
-# KPIs not shown in the dashboard (granular sub-metrics)
+# KPIs not shown in the main dashboard (granular sub-metrics).
+# For globally-hidden KPIs (excluded from EVERY dashboard), see
+# DASHBOARD_HIDDEN_KPIS in database/db.py — filtered at the data layer.
 EXCLUDED_KPIS = [
     'SQL - Inbound',
     'SQL - Outbound',
     'New Logo Win Rate - CFT/Project Based',
     'New Logo Win Rate - CR/NPS Based',
-    # Hidden 2026-05-12 per Baker
-    'Renewal ARR risk (Next 180 days)',
-    'Renewal Logo Risk (Next 180 days)',
-    'High Risk Accounts (Next 6 Months)',
-    'High Risk Account ARR (Next 6 Months)',
-    'CR - Total Surveys Sent',
-    'CFT - Total Surveys Sent',
-    'CRS - Monthly Active Users',
-    'CFT - Monthly Active Users',
-    'Core Product Adoption (Workflow Penetration)',
-    'Account Risk - Product Issues',
-    'Account Risk - Support Issues',
-    'Account Risk - Response Rate Issues',
-    'Account Risk - Low Surveys Sent',
-    'ARR at Risk - All Product Issues',
 ]
 
 CURRENCY_KPI_KEYWORDS = ['arr', 'pipeline', 'coverage', 'cost/inbound', 'acv', 'ebitda', 'new created']

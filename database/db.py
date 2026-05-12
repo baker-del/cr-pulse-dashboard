@@ -16,6 +16,26 @@ import pandas as pd
 Base = declarative_base()
 
 
+# KPIs hidden from every dashboard display (data still syncs to DB).
+# Applied at the data-access layer so all dashboards inherit the exclusion.
+DASHBOARD_HIDDEN_KPIS = frozenset([
+    'Renewal ARR risk (Next 180 days)',
+    'Renewal Logo Risk (Next 180 days)',
+    'High Risk Accounts (Next 6 Months)',
+    'High Risk Account ARR (Next 6 Months)',
+    'CR - Total Surveys Sent',
+    'CFT - Total Surveys Sent',
+    'CRS - Monthly Active Users',
+    'CFT - Monthly Active Users',
+    'Core Product Adoption (Workflow Penetration)',
+    'Account Risk - Product Issues',
+    'Account Risk - Support Issues',
+    'Account Risk - Response Rate Issues',
+    'Account Risk - Low Surveys Sent',
+    'ARR at Risk - All Product Issues',
+])
+
+
 # Database Models
 
 class KPI(Base):
@@ -361,6 +381,8 @@ class Database:
             kpis = session.query(KPI).order_by(KPI.date.desc()).all()
             kpi_dict: dict = {}
             for kpi in kpis:
+                if kpi.kpi_name in DASHBOARD_HIDDEN_KPIS:
+                    continue
                 if kpi.kpi_name not in kpi_dict:
                     kpi_dict[kpi.kpi_name] = kpi
             data = [kpi.to_dict() for kpi in kpi_dict.values()]
@@ -390,6 +412,8 @@ class Database:
             # Group by kpi_name and get latest (by date, then by id as tiebreaker)
             kpi_dict = {}
             for kpi in kpis:
+                if kpi.kpi_name in DASHBOARD_HIDDEN_KPIS:
+                    continue
                 existing = kpi_dict.get(kpi.kpi_name)
                 if existing is None:
                     kpi_dict[kpi.kpi_name] = kpi
