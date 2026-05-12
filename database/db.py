@@ -7,8 +7,7 @@ Uses SQLAlchemy ORM with support for both SQLite (local) and PostgreSQL (cloud)
 import os
 from datetime import datetime, date
 from sqlalchemy import create_engine, Column, Integer, String, Float, Date, DateTime, Text
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy.pool import NullPool
 from typing import List, Dict, Optional
 import pandas as pd
