@@ -132,9 +132,23 @@ STAGE_PROBABILITY_MAP = {
 _DEFAULT_STAGE_PROB = 0.25   # fallback for any unrecognised stage
 
 
+def _parse_gut_forecast(raw: str) -> float | None:
+    """Parse ae_gut_forecast string like 'Commit - 90%' → 0.90. Returns None if unparseable."""
+    if not raw or str(raw).strip() in ('', 'None', 'null'):
+        return None
+    import re
+    m = re.search(r'(\d+(?:\.\d+)?)\s*%', str(raw))
+    if m:
+        return float(m.group(1)) / 100.0
+    return None
+
+
 def _get_stage_probability(props: dict) -> float:
-    """Return close probability (0.0–1.0) using hs_deal_stage_probability if present,
-    otherwise fall back to STAGE_PROBABILITY_MAP."""
+    """Return close probability (0.0–1.0).
+    Priority: ae_gut_forecast → hs_deal_stage_probability → STAGE_PROBABILITY_MAP."""
+    gut = _parse_gut_forecast(props.get('ae_gut_forecast', ''))
+    if gut is not None:
+        return gut
     raw = props.get('hs_deal_stage_probability', '')
     if raw and str(raw).strip() not in ('', 'None', 'null'):
         try:
