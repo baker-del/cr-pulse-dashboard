@@ -662,6 +662,7 @@ def render_exec_summary(df, quarter, year, pct_elapsed, days_left):
     nl_arr = _kpi_val(df, 'New Logo ARR')
     nl_target = _kpi_target(df, 'New Logo ARR')
     exp_arr = _kpi_val(df, 'Expansion ARR')
+    exp_arr_forecast = _kpi_val(df, 'Expansion ARR Forecast')
     exp_target = _kpi_target(df, 'Expansion ARR')
     total_forecast = _kpi_val(df, 'Total New ARR Forecast')
     total_target = _kpi_target(df, 'Total New ARR Forecast')
@@ -752,10 +753,12 @@ def render_exec_summary(df, quarter, year, pct_elapsed, days_left):
             st.metric("Logo Retention", f"{logo_ret:.1f}%", delta,
                       delta_color="inverse" if logo_ret_target and logo_ret < logo_ret_target else "normal")
     with r4:
-        if exp_arr is not None:
-            delta = f"{exp_arr/exp_target*100:.0f}% of target" if exp_target else ""
-            st.metric("Expansion ARR", f"${exp_arr:,.0f}", delta,
-                      delta_color="inverse" if exp_target and exp_arr < exp_target else "normal")
+        display_exp = exp_arr_forecast if exp_arr_forecast is not None else exp_arr
+        if display_exp is not None:
+            delta = f"{display_exp/exp_target*100:.0f}% of target" if exp_target else ""
+            label = "Expansion ARR Forecast" if exp_arr_forecast is not None else "Expansion ARR"
+            st.metric(label, f"${display_exp:,.0f}", delta,
+                      delta_color="inverse" if exp_target and display_exp < exp_target else "normal")
     with r5:
         if acv is not None:
             delta = f"Target: ${acv_target:,.0f}" if acv_target else ""

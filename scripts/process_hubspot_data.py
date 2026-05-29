@@ -664,6 +664,10 @@ def save_kpis_to_db(kpis, quarter="Q1", year=2026):
               f"Forecast: {exp_forecast_str} | "
               f"{kpis['expansion_arr']['count']} expansion deals: {', '.join(kpis['expansion_arr']['deals'])}"),
 
+        entry('Expansion ARR Forecast', 'CS', 'Monthly',
+              kpis['expansion_arr_forecast']['value'], targets['Expansion ARR'],
+              'HubSpot', f"Probability-weighted expansion forecast for {quarter}"),
+
         entry('SQL', 'Sales', 'Monthly',
               kpis['sqls']['total'], targets['SQL'],
               'HubSpot',
