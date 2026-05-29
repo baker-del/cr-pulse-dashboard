@@ -362,20 +362,21 @@ def process_hubspot_deals(deals_data, quarter="Q1", year=2026):
             expansion_deals.append(dealname)
 
         # ── NEW LOGO ARR FORECAST ──────────────────────────────────────────
-        # All deals (any stage except closed-lost) in New Logo pipelines
+        # All open deals (not closed-lost) in New Logo pipelines
         # with close date this quarter, excluding renewal-type deals.
         # Weighted by hs_deal_stage_probability (falls back to STAGE_PROBABILITY_MAP).
-        # dealtype check uses 'in' to catch "Renewal Business", "renewal", etc.
-        if q1_close and pipeline in NEW_LOGO_PIPELINES and 'renewal' not in dealtype:
+        # Explicitly exclude closed-lost: HubSpot retains non-zero stage probability
+        # on lost deals, so we must filter by stage rather than relying on prob > 0.
+        if q1_close and pipeline in NEW_LOGO_PIPELINES and 'renewal' not in dealtype and not closed_lost:
             prob = _get_stage_probability(props)
             if prob > 0:
                 new_logo_forecast += amount * prob
 
         # ── EXPANSION ARR FORECAST ─────────────────────────────────────────
-        # All deals (any stage except closed-lost) in Expansion pipeline
+        # All open deals (not closed-lost) in Expansion pipeline
         # with close date this quarter. Weighted by hs_deal_stage_probability
         # (falls back to STAGE_PROBABILITY_MAP).
-        if q1_close and pipeline in EXPANSION_PIPELINES:
+        if q1_close and pipeline in EXPANSION_PIPELINES and not closed_lost:
             prob = _get_stage_probability(props)
             if prob > 0:
                 expansion_forecast += amount * prob
