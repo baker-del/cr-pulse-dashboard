@@ -143,12 +143,14 @@ def _parse_gut_forecast(raw: str) -> float | None:
     return None
 
 
-def _get_stage_probability(props: dict) -> float:
+def _get_stage_probability(props: dict, use_gut: bool = True) -> float:
     """Return close probability (0.0–1.0).
-    Priority: ae_gut_forecast → hs_deal_stage_probability → STAGE_PROBABILITY_MAP."""
-    gut = _parse_gut_forecast(props.get('ae_gut_forecast', ''))
-    if gut is not None:
-        return gut
+    Priority (when use_gut=True): ae_gut_forecast → hs_deal_stage_probability → STAGE_PROBABILITY_MAP.
+    When use_gut=False: hs_deal_stage_probability → STAGE_PROBABILITY_MAP only."""
+    if use_gut:
+        gut = _parse_gut_forecast(props.get('ae_gut_forecast', ''))
+        if gut is not None:
+            return gut
     raw = props.get('hs_deal_stage_probability', '')
     if raw and str(raw).strip() not in ('', 'None', 'null'):
         try:
@@ -267,8 +269,8 @@ def process_hubspot_deals(deals_data, quarter="Q1", year=2026):
     new_logo_deals = []
     expansion_arr = 0
     expansion_deals = []
-    new_logo_forecast = 0.0   # probability-weighted forecast
-    expansion_forecast = 0.0  # probability-weighted forecast
+    new_logo_forecast = 0.0   # closed-won actual + probability-weighted open
+    expansion_forecast = 0.0  # closed-won actual + probability-weighted open
     sqls_total = 0
     sqls_inbound = 0
     sqls_outbound = 0
@@ -362,24 +364,28 @@ def process_hubspot_deals(deals_data, quarter="Q1", year=2026):
             expansion_deals.append(dealname)
 
         # ── NEW LOGO ARR FORECAST ──────────────────────────────────────────
-        # All open deals (not closed-lost) in New Logo pipelines
-        # with close date this quarter, excluding renewal-type deals.
-        # Weighted by hs_deal_stage_probability (falls back to STAGE_PROBABILITY_MAP).
-        # Explicitly exclude closed-lost: HubSpot retains non-zero stage probability
-        # on lost deals, so we must filter by stage rather than relying on prob > 0.
+        # Full quarter outlook: closed-won actual + probability-weighted open deals.
+        # Excludes closed-lost and renewal-type deals.
+        # Open deals use ae_gut_forecast when set, else hs_deal_stage_probability,
+        # else STAGE_PROBABILITY_MAP.
         if q1_close and pipeline in NEW_LOGO_PIPELINES and 'renewal' not in dealtype and not closed_lost:
-            prob = _get_stage_probability(props)
-            if prob > 0:
-                new_logo_forecast += amount * prob
+            if closed_won:
+                new_logo_forecast += amount
+            else:
+                prob = _get_stage_probability(props)
+                if prob > 0:
+                    new_logo_forecast += amount * prob
 
         # ── EXPANSION ARR FORECAST ─────────────────────────────────────────
-        # All open deals (not closed-lost) in Expansion pipeline
-        # with close date this quarter. Weighted by hs_deal_stage_probability
-        # (falls back to STAGE_PROBABILITY_MAP).
+        # Full quarter outlook: closed-won actual + probability-weighted open deals.
+        # Excludes closed-lost. Open deals use stage probability only (no AE gut forecast).
         if q1_close and pipeline in EXPANSION_PIPELINES and not closed_lost:
-            prob = _get_stage_probability(props)
-            if prob > 0:
-                expansion_forecast += amount * prob
+            if closed_won:
+                expansion_forecast += amount
+            else:
+                prob = _get_stage_probability(props, use_gut=False)
+                if prob > 0:
+                    expansion_forecast += amount * prob
 
         # ── SQLs ──────────────────────────────────────────────────────────
         # Created this quarter, in Sales or ClientSavvy Sales pipeline,

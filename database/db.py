@@ -11,6 +11,9 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy.pool import NullPool
 from typing import List, Dict, Optional
 import pandas as pd
+import sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils.kpi_calculator import calculate_variance
 
 Base = declarative_base()
 
@@ -315,6 +318,15 @@ class Database:
                     return None  # Truly unchanged — leave row intact
 
                 # Something changed: update in place (no new row)
+                # Auto-recalculate status/variance when actual or target is present
+                new_actual = kpi_data.get('actual_value', existing.actual_value)
+                new_target = kpi_data.get('target_value', existing.target_value)
+                if new_actual is not None and new_target is not None:
+                    calc_variance, calc_status, _ = calculate_variance(new_actual, new_target)
+                    if calc_status:
+                        kpi_data['status'] = calc_status
+                    if calc_variance is not None:
+                        kpi_data['variance_pct'] = calc_variance
                 for field in ('actual_value', 'target_value', 'status', 'variance_pct',
                               'source', 'comments', 'date', 'updated_by'):
                     if field in kpi_data:
