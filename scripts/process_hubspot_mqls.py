@@ -105,7 +105,7 @@ def process_mqls(contacts: list, quarter: str, year: int):
     SM_TARGETS = {
         'SM_SAL_MQL_Volume': '180',
         'SM_AEC_MQL_Volume': '105',
-        'SM_ICP_MQL_Share':  '90%',
+        'SM_ICP_MQL_Share':  '80%',
         'SM_SAL_MQL_SAL':    '55%',
         'SM_AEC_MQL_SAL':    '40%',
         'SM_SAL_MQL_SQL':    '35%',

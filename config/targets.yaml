@@ -57,6 +57,7 @@ Q2:
     SM_AEC_Win_Rate:                    "25%"
     SM_SAL_Bookings:                    "180000"
     SM_AEC_Bookings:                    "292000"
+    SM_ICP_MQL_Share:                   "80%"
     SM_SAL_MQL_SQL:                     "35%"
     SM_AEC_MQL_SQL:                     "35%"
     SM_SAL_Disc_Demo:                   "45%"
