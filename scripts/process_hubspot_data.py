@@ -659,6 +659,10 @@ def save_kpis_to_db(kpis, quarter="Q1", year=2026):
               'HubSpot',
               f"NL Forecast: {nl_forecast_str} + Exp Forecast: {exp_forecast_str}"),
 
+        entry('New Logo ARR Forecast', 'Sales', 'Monthly',
+              kpis['new_logo_arr_forecast']['value'], targets.get('New Logo ARR Forecast', ''),
+              'HubSpot', ''),
+
         entry('New Logo ARR', 'Sales', 'Monthly',
               kpis['new_logo_arr']['value'], targets['New Logo ARR'],
               'HubSpot',
