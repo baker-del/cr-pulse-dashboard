@@ -145,20 +145,23 @@ def _parse_gut_forecast(raw: str) -> float | None:
 
 def _get_stage_probability(props: dict, use_gut: bool = True) -> float:
     """Return close probability (0.0–1.0).
-    Priority (when use_gut=True): ae_gut_forecast → hs_deal_stage_probability → STAGE_PROBABILITY_MAP.
-    When use_gut=False: hs_deal_stage_probability → STAGE_PROBABILITY_MAP only."""
-    if use_gut:
-        gut = _parse_gut_forecast(props.get('ae_gut_forecast', ''))
-        if gut is not None:
-            return gut
+    New logo (use_gut=True): stage_prob × ae_gut_forecast (if set), else stage_prob alone.
+    Expansion (use_gut=False): hs_deal_stage_probability → STAGE_PROBABILITY_MAP only."""
+    stage = props.get('dealstage', '')
     raw = props.get('hs_deal_stage_probability', '')
     if raw and str(raw).strip() not in ('', 'None', 'null'):
         try:
-            return float(raw)
+            sp = float(raw)
         except (ValueError, TypeError):
-            pass
-    stage = props.get('dealstage', '')
-    return STAGE_PROBABILITY_MAP.get(stage, _DEFAULT_STAGE_PROB)
+            sp = STAGE_PROBABILITY_MAP.get(stage, _DEFAULT_STAGE_PROB)
+    else:
+        sp = STAGE_PROBABILITY_MAP.get(stage, _DEFAULT_STAGE_PROB)
+
+    if use_gut:
+        gut = _parse_gut_forecast(props.get('ae_gut_forecast', ''))
+        if gut is not None:
+            return sp * gut
+    return sp
 
 
 def _is_closed_won(stage: str) -> bool:
