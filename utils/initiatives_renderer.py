@@ -20,6 +20,8 @@ def days_until(d_str):
         return None
 
 
+ARCHIVED_PROJECT_NAMES = {"Wayfinder", "Profitability", "The Human Edge", "Strategic Partnerships", "Moonshot"}
+
 PROJECTS = [
     {
         "name": "100% NRR",
@@ -360,22 +362,33 @@ def render_initiatives(target=None):
     st.title("📁 Strategic Initiatives")
     st.caption(f"Last refreshed: {TODAY.strftime('%B %-d, %Y')}")
 
-    on_track = sum(1 for p in PROJECTS if p["status"] == "On Track")
-    at_risk  = sum(1 for p in PROJECTS if p["status"] == "At Risk")
-    behind   = sum(1 for p in PROJECTS if p["status"] == "Behind")
+    active   = [p for p in PROJECTS if p["name"] not in ARCHIVED_PROJECT_NAMES]
+    archived = [p for p in PROJECTS if p["name"] in ARCHIVED_PROJECT_NAMES]
+
+    on_track = sum(1 for p in active if p["status"] == "On Track")
+    at_risk  = sum(1 for p in active if p["status"] == "At Risk")
+    behind   = sum(1 for p in active if p["status"] == "Behind")
 
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Total Initiatives", len(PROJECTS))
+    c1.metric("Active Initiatives", len(active))
     c2.metric("On Track", on_track)
     c3.metric("At Risk", at_risk)
     c4.metric("Behind", behind)
 
     st.markdown("---")
 
-    for project in PROJECTS:
+    for project in active:
         anchor_id = project["name"].lower().replace(" ", "-").replace("&", "and")
         st.markdown(f'<div id="{anchor_id}"></div>', unsafe_allow_html=True)
         render_project_card(project)
+
+    if archived:
+        st.markdown("---")
+        st.markdown("### Archive")
+        st.caption("Initiatives no longer actively tracked in the nav.")
+        for project in archived:
+            with st.expander(f"{project['name']} — {project['tagline']}"):
+                render_project_card(project)
 
     if target:
         anchor_id = target.lower().replace(" ", "-").replace("&", "and")

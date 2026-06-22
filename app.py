@@ -141,16 +141,13 @@ pg = st.navigation(
             st.Page("pages/1_📊_Dashboard.py", title="Quarterly KPI Dashboard", icon="📊"),
             st.Page("pages/5_📅_Annual_Dashboard.py", title="Annual KPI Dashboard", icon="📅"),
             st.Page("pages/3_📈_SM_Efficiency.py", title="S&M Efficiency", icon="📈"),
+            st.Page("pages/6_🚀_Onboarding.py", title="Customer Onboarding", icon="🚀"),
         ],
         "STRATEGY": [
             st.Page("pages/strat_nrr100.py",       title="100% NRR",       icon="📈"),
-            st.Page("pages/strat_wayfinder.py",    title="Wayfinder",      icon="🧭"),
             st.Page("pages/strat_sm.py",           title="S&M Efficiency", icon="📊"),
-            st.Page("pages/strat_profitability.py",title="Profitability",  icon="💰"),
             st.Page("pages/strat_prism.py",        title="PRISM",          icon="🔮"),
-            st.Page("pages/strat_human_edge.py",   title="The Human Edge", icon="🎙️"),
-            st.Page("pages/strat_partnerships.py", title="Strategic Partnerships", icon="🤝"),
-            st.Page("pages/strat_moonshot.py",     title="Moonshot",       icon="🚀"),
+            st.Page("pages/2_📁_Strategic_Initiatives.py", title="All Initiatives", icon="📁"),
         ],
         "ADMIN": [
             st.Page("pages/4_⚙️_Settings.py", title="Settings", icon="⚙️"),
