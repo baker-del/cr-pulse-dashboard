@@ -194,14 +194,14 @@ def _find_row(all_values: list, label: str) -> list | None:
 
 
 def _latest_actual(row: list) -> tuple[str | None, int | None]:
-    """Return (value, absolute_col_index) of the rightmost non-empty data cell.
+    """Return (value, absolute_col_index) of the leftmost non-empty data cell.
 
+    Sheet is organized newest-first: column H = most recent, columns to the right = older.
     absolute_col_index is the 0-based column index in the full row (H onwards).
     Returns (None, None) if no data found.
     """
     data_cells = row[DATA_START_COL:]
-    for i in range(len(data_cells) - 1, -1, -1):
-        val = data_cells[i]
+    for i, val in enumerate(data_cells):
         if val and str(val).strip() not in ('', '-', 'N/A', '#N/A'):
             return str(val).strip(), DATA_START_COL + i
     return None, None
