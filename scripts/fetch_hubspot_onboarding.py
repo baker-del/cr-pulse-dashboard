@@ -8,6 +8,9 @@ Pulls two pipelines:
 
 Window: last 90 days + next 90 days from run date.
 
+Also fetches the Onboarding pipeline (887428778) and cross-references all 2026
+YTD closed-won deals to build the onboarding status table.
+
 Usage:
     python scripts/fetch_hubspot_onboarding.py
 Output:
@@ -28,6 +31,7 @@ ROOT = Path(__file__).parent.parent
 load_dotenv(ROOT / ".env")
 
 HUBSPOT_API_KEY = os.environ.get("HUBSPOT_API_KEY", "")
+PORTAL_ID = "2787478"
 SEARCH_URL = "https://api.hubapi.com/crm/v3/objects/deals/search"
 OWNERS_URL = "https://api.hubapi.com/crm/v3/owners"
 
@@ -143,6 +147,170 @@ def parse_deal(d, pipeline_label, stage_map, owners, min_arr=0):
     }
 
 
+ONBOARDING_PIPELINE = "887428778"
+
+ONBOARDING_STAGE_MAP = {
+    "1334736025": "Handoff to Onboarding",
+    "1334736026": "Client Kickoff",
+    "1334736027": "Onboarding Plan Completed",
+    "1334736028": "Set Up Systems",
+    "1334736029": "Set Up Integrations",
+    "1334895633": "Training & Enablement",
+    "1334895634": "Survey Launch Readiness",
+    "1334736030": "Survey Launch",
+    "1334736031": "Failure to Launch",
+}
+
+ONBOARDING_CATEGORY_MAP = {
+    "1334736025": "Not Started",
+    "1334736026": "In Progress",
+    "1334736027": "In Progress",
+    "1334736028": "In Progress",
+    "1334736029": "In Progress",
+    "1334895633": "In Progress",
+    "1334895634": "In Progress",
+    "1334736030": "Survey Launched",
+    "1334736031": "Failure to Launch",
+}
+
+CLOSED_WON_PIPELINES = {
+    "default":   ["closedwon"],
+    "47062345":  ["96961410"],
+    "757781604": ["1102698292"],
+}
+PIPELINE_LABEL = {"default": "New Logo", "47062345": "Expansion", "757781604": "ClientSavvy"}
+
+
+def fetch_onboarding_status(owners: dict, today: date) -> list:
+    """Cross-reference 2026 YTD closed-won deals against the onboarding pipeline."""
+
+    # 1. Pull all deals in the onboarding pipeline
+    ob_payload = {
+        "filterGroups": [{"filters": [
+            {"propertyName": "pipeline", "operator": "EQ", "value": ONBOARDING_PIPELINE},
+        ]}],
+        "properties": ["dealname", "dealstage", "amount", "closedate", "createdate", "hubspot_owner_id"],
+        "limit": 200,
+    }
+    resp = requests.post(SEARCH_URL, headers=headers(), json=ob_payload, timeout=15)
+    ob_raw = resp.json().get("results", [])
+    print(f"  → Onboarding pipeline: {len(ob_raw)} deals")
+
+    def _norm(name: str) -> str:
+        return name.lower().replace(" (clone)", "").replace("-", " ").replace("  ", " ").strip()
+
+    ob_lookup: dict = {}
+    for r in ob_raw:
+        p = r["properties"]
+        stage_id = p.get("dealstage", "")
+        ob_cd = (p.get("closedate") or "")[:10]
+        nm = _norm(p.get("dealname", ""))
+        ob_lookup[nm] = {
+            "stage_id":    stage_id,
+            "stage_label": ONBOARDING_STAGE_MAP.get(stage_id, stage_id),
+            "category":    ONBOARDING_CATEGORY_MAP.get(stage_id, "Unknown"),
+            "ob_closedate": ob_cd,
+            "ob_deal_id":  r["id"],
+        }
+
+    def _find_ob(sale_name: str):
+        nm = _norm(sale_name)
+        if nm in ob_lookup:
+            return ob_lookup[nm]
+        for key, val in ob_lookup.items():
+            if nm[:25] in key or key[:25] in nm:
+                return val
+        return None
+
+    # 2. Pull all 2026 closed-won deals (New Logo + significant Expansion)
+    ytd_start = "2026-01-01"
+    today_str = today.strftime("%Y-%m-%d")
+
+    all_sales: list = []
+    for pid, stages in CLOSED_WON_PIPELINES.items():
+        payload = {
+            "filterGroups": [{"filters": [
+                {"propertyName": "closedate", "operator": "GTE", "value": ytd_start},
+                {"propertyName": "closedate", "operator": "LTE", "value": today_str},
+                {"propertyName": "pipeline",  "operator": "EQ",  "value": pid},
+                {"propertyName": "dealstage", "operator": "IN",  "values": stages},
+            ]}],
+            "properties": [
+                "dealname", "dealstage", "pipeline", "amount", "closedate",
+                "hubspot_owner_id", "company_industry_dropdown",
+            ],
+            "limit": 200,
+        }
+        after = None
+        while True:
+            if after:
+                payload["after"] = after
+            resp = requests.post(SEARCH_URL, headers=headers(), json=payload, timeout=15)
+            data = resp.json()
+            for r in data.get("results", []):
+                p = r["properties"]
+                nm = p.get("dealname", "")
+                arr = float(p.get("amount") or 0)
+                is_price_increase = "price increase" in nm.lower()
+                is_nl = pid in ("default", "757781604")
+                if is_nl or (not is_price_increase and arr >= 4000):
+                    all_sales.append({
+                        "id":        r["id"],
+                        "name":      nm,
+                        "arr":       arr,
+                        "pipeline":  PIPELINE_LABEL.get(pid, pid),
+                        "closedate": (p.get("closedate") or "")[:10],
+                        "vertical":  p.get("company_industry_dropdown") or "—",
+                        "owner":     owners.get(str(p.get("hubspot_owner_id") or ""), "—"),
+                        "deal_url":  f"https://app.hubspot.com/contacts/{PORTAL_ID}/deal/{r['id']}",
+                    })
+            paging = data.get("paging", {})
+            if "next" not in paging:
+                break
+            after = paging["next"]["after"]
+            time.sleep(0.05)
+
+    all_sales.sort(key=lambda x: x["closedate"])
+    print(f"  → YTD closed-won (NL + significant Exp): {len(all_sales)} deals")
+
+    # 3. Cross-reference
+    status_rows = []
+    for d in all_sales:
+        cd = datetime.strptime(d["closedate"], "%Y-%m-%d").date()
+        ob = _find_ob(d["name"])
+        if ob:
+            stage_id = ob["stage_id"]
+            stage_label = ob["stage_label"]
+            category = ob["category"]
+            ob_cd_str = ob.get("ob_closedate", "")
+            if stage_id == "1334736030" and ob_cd_str:
+                # Survey Launched: days = closed-won → survey launch date
+                launch_dt = datetime.strptime(ob_cd_str, "%Y-%m-%d").date()
+                days_elapsed = (launch_dt - cd).days
+            else:
+                days_elapsed = (today - cd).days
+        else:
+            stage_label = "—"
+            category = "Not Started"
+            days_elapsed = (today - cd).days
+
+        status_rows.append({
+            "id":            d["id"],
+            "name":          d["name"],
+            "arr":           d["arr"],
+            "pipeline":      d["pipeline"],
+            "closedate":     d["closedate"],
+            "days_elapsed":  days_elapsed,
+            "stage_label":   stage_label,
+            "category":      category,
+            "deal_url":      d["deal_url"],
+            "vertical":      d["vertical"],
+            "csm":           d["owner"],
+        })
+
+    return status_rows
+
+
 def main():
     if not HUBSPOT_API_KEY:
         print("ERROR: HUBSPOT_API_KEY not set in .env")
@@ -183,11 +351,18 @@ def main():
     for d in deals:
         print(f"  [{d['month_label']:8}] [{d['pipeline']:9}] {d['name'][:45]:45} ${d['arr']:>9,.0f}  {d['stage_label']}")
 
+    print("\nFetching onboarding status cross-reference...")
+    onboarding_status = fetch_onboarding_status(owners, today)
+    print(f"✅ {len(onboarding_status)} customers in onboarding status table")
+    for r in onboarding_status:
+        print(f"  {r['closedate']} | {r['days_elapsed']:>4}d | {r['category']:<20} | {r['stage_label']:<30} | {r['name'][:50]}")
+
     output = {
-        "fetched_at":    datetime.now().isoformat(),
-        "window_start":  past,
-        "window_end":    future,
-        "deals":         deals,
+        "fetched_at":       datetime.now().isoformat(),
+        "window_start":     past,
+        "window_end":       future,
+        "deals":            deals,
+        "onboarding_status": onboarding_status,
     }
 
     out_path = ROOT / "hubspot_onboarding.json"

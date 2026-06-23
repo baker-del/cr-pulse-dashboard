@@ -27,10 +27,10 @@ CLOSED_WON_LABEL = "Closed Won"
 @st.cache_data(ttl=300)
 def load_data(mtime: float):
     if not DATA_FILE.exists():
-        return None, []
+        return None, [], []
     with open(DATA_FILE) as f:
         raw = json.load(f)
-    return raw.get("fetched_at", ""), raw.get("deals", [])
+    return raw.get("fetched_at", ""), raw.get("deals", []), raw.get("onboarding_status", [])
 
 
 def _months_in_window(start: date, end: date):
@@ -89,7 +89,7 @@ def main():
     st.title("🚀 Customer Onboarding")
 
     mtime = DATA_FILE.stat().st_mtime if DATA_FILE.exists() else 0.0
-    fetched_at, deals = load_data(mtime)
+    fetched_at, deals, status_rows = load_data(mtime)
 
     if fetched_at:
         try:
@@ -227,6 +227,105 @@ def main():
         '</table></div>'
     )
     st.markdown(table_html, unsafe_allow_html=True)
+
+    # ── Onboarding Status Table ────────────────────────────────────────────────
+    st.markdown("---")
+    st.markdown("### 2026 Customer Onboarding Status")
+    st.caption("All 2026 new logo + significant expansion deals · Days = time from Closed Won (to survey launch for launched; to today otherwise)")
+
+    if status_rows:
+        CAT_STYLE = {
+            "Not Started":      {"color": "#92400E", "bg": "#FEF3C7", "border": "#F59E0B", "label": "Not Started"},
+            "In Progress":      {"color": "#1E40AF", "bg": "#EFF6FF", "border": "#3B82F6", "label": "In Progress"},
+            "Survey Launched":  {"color": "#065F46", "bg": "#F0FDF4", "border": "#10B981", "label": "Survey Launched"},
+            "Failure to Launch":{"color": "#7F1D1D", "bg": "#FEF2F2", "border": "#EF4444", "label": "Failure to Launch"},
+        }
+
+        def _days_badge(days, category):
+            if category == "Survey Launched":
+                color = "#065F46"; bg = "#D1FAE5"
+            elif days >= 90:
+                color = "#7F1D1D"; bg = "#FEE2E2"
+            elif days >= 45:
+                color = "#92400E"; bg = "#FEF3C7"
+            else:
+                color = "#374151"; bg = "#F3F4F6"
+            return (
+                f'<span style="background:{bg};color:{color};font-weight:700;'
+                f'font-size:11px;padding:2px 7px;border-radius:10px;">{days}d</span>'
+            )
+
+        th_cells = "".join([
+            '<th style="text-align:left;padding:8px 12px;font-size:12px;font-weight:600;border-bottom:2px solid #E5E7EB;white-space:nowrap;">Customer</th>',
+            '<th style="text-align:right;padding:8px 12px;font-size:12px;font-weight:600;border-bottom:2px solid #E5E7EB;white-space:nowrap;">ARR</th>',
+            '<th style="text-align:left;padding:8px 12px;font-size:12px;font-weight:600;border-bottom:2px solid #E5E7EB;white-space:nowrap;">Pipeline</th>',
+            '<th style="text-align:left;padding:8px 12px;font-size:12px;font-weight:600;border-bottom:2px solid #E5E7EB;white-space:nowrap;">Closed Won</th>',
+            '<th style="text-align:center;padding:8px 12px;font-size:12px;font-weight:600;border-bottom:2px solid #E5E7EB;white-space:nowrap;">Days</th>',
+            '<th style="text-align:left;padding:8px 12px;font-size:12px;font-weight:600;border-bottom:2px solid #E5E7EB;white-space:nowrap;">Onboarding Stage</th>',
+            '<th style="text-align:left;padding:8px 12px;font-size:12px;font-weight:600;border-bottom:2px solid #E5E7EB;white-space:nowrap;">Status</th>',
+        ])
+
+        rows_html2 = ""
+        for i, r in enumerate(status_rows):
+            cat = r.get("category", "Not Started")
+            cfg = CAT_STYLE.get(cat, CAT_STYLE["Not Started"])
+            days = r.get("days_elapsed", 0)
+            arr = r.get("arr", 0)
+            arr_str = f"${arr:,.0f}"
+            cd = r.get("closedate", "")
+            try:
+                cd_label = datetime.strptime(cd, "%Y-%m-%d").strftime("%b %d, %Y")
+            except Exception:
+                cd_label = cd
+            name = r.get("name", "")
+            short_name = name[:50] + ("…" if len(name) > 50 else "")
+            url = r.get("deal_url", "#")
+            stage = r.get("stage_label", "—")
+            pipeline_label = r.get("pipeline", "")
+            row_bg = "#FFFFFF" if i % 2 == 0 else "#FAFAFA"
+
+            cat_badge = (
+                f'<span style="background:{cfg["bg"]};color:{cfg["color"]};'
+                f'border:1px solid {cfg["border"]};font-size:11px;font-weight:600;'
+                f'padding:2px 8px;border-radius:10px;white-space:nowrap;">{cfg["label"]}</span>'
+            )
+            name_link = (
+                f'<a href="{url}" target="_blank" '
+                f'style="color:#1E40AF;font-weight:600;text-decoration:none;font-size:12px;">'
+                f'{short_name}</a>'
+            )
+            rows_html2 += (
+                f'<tr style="background:{row_bg};">'
+                f'<td style="padding:8px 12px;border-bottom:1px solid #F3F4F6;vertical-align:middle;">{name_link}</td>'
+                f'<td style="padding:8px 12px;border-bottom:1px solid #F3F4F6;text-align:right;font-size:12px;font-weight:600;vertical-align:middle;">{arr_str}</td>'
+                f'<td style="padding:8px 12px;border-bottom:1px solid #F3F4F6;font-size:11px;color:#6B7280;vertical-align:middle;">{pipeline_label}</td>'
+                f'<td style="padding:8px 12px;border-bottom:1px solid #F3F4F6;font-size:12px;white-space:nowrap;vertical-align:middle;">{cd_label}</td>'
+                f'<td style="padding:8px 12px;border-bottom:1px solid #F3F4F6;text-align:center;vertical-align:middle;">{_days_badge(days, cat)}</td>'
+                f'<td style="padding:8px 12px;border-bottom:1px solid #F3F4F6;font-size:11px;color:#374151;vertical-align:middle;">{stage}</td>'
+                f'<td style="padding:8px 12px;border-bottom:1px solid #F3F4F6;vertical-align:middle;">{cat_badge}</td>'
+                f'</tr>'
+            )
+
+        status_table_html = (
+            '<div style="overflow-x:auto;margin:12px 0;">'
+            '<table style="border-collapse:collapse;width:100%;background:#FFFFFF;'
+            'border-radius:8px;border:1px solid #E5E7EB;font-family:Inter,sans-serif;">'
+            f'<thead><tr style="background:#F9FAFB;">{th_cells}</tr></thead>'
+            f'<tbody>{rows_html2}</tbody>'
+            '</table></div>'
+        )
+        st.markdown(status_table_html, unsafe_allow_html=True)
+
+        not_started = sum(1 for r in status_rows if r.get("category") == "Not Started")
+        in_progress = sum(1 for r in status_rows if r.get("category") == "In Progress")
+        launched    = sum(1 for r in status_rows if r.get("category") == "Survey Launched")
+        failed      = sum(1 for r in status_rows if r.get("category") == "Failure to Launch")
+        st.caption(
+            f"Not Started: **{not_started}** · In Progress: **{in_progress}** · "
+            f"Survey Launched: **{launched}** · Failure to Launch: **{failed}**"
+        )
+    else:
+        st.info("Re-run `python scripts/fetch_hubspot_onboarding.py` to populate onboarding status.")
 
     # ── Board ──────────────────────────────────────────────────────────────────
     by_month  = defaultdict(list)
