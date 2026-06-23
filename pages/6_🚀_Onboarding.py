@@ -5,13 +5,30 @@ Board view by close month: last 90 days + next 90 days.
 """
 
 import json
+import pandas as pd
 import streamlit as st
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from collections import defaultdict
 
-ROOT       = Path(__file__).parent.parent
-DATA_FILE  = ROOT / "hubspot_onboarding.json"
+ROOT            = Path(__file__).parent.parent
+DATA_FILE       = ROOT / "hubspot_onboarding.json"
+OVERRIDES_FILE  = ROOT / "database" / "onboarding_overrides.json"
+
+CAT_ORDER = ["Not Started", "Onboarding In Progress", "Onboarding Complete", "Survey Launched"]
+
+
+def load_overrides() -> dict:
+    if OVERRIDES_FILE.exists():
+        with open(OVERRIDES_FILE) as f:
+            return json.load(f)
+    return {}
+
+
+def save_overrides(overrides: dict):
+    OVERRIDES_FILE.parent.mkdir(parents=True, exist_ok=True)
+    with open(OVERRIDES_FILE, "w") as f:
+        json.dump(overrides, f, indent=2)
 
 STAGE_COLORS = {
     "Onboarding Overview": {"color": "#5B21B6", "bg": "#F5F3FF", "border": "#A78BFA"},
@@ -233,22 +250,26 @@ def main():
     st.markdown("### 2026 Customer Onboarding Status")
 
     if status_rows:
-        CAT_STYLE = {
-            "Not Started":            {"color": "#92400E", "bg": "#FEF3C7", "border": "#F59E0B"},
-            "Onboarding In Progress": {"color": "#1E40AF", "bg": "#EFF6FF", "border": "#3B82F6"},
-            "Onboarding Complete":    {"color": "#5B21B6", "bg": "#F5F3FF", "border": "#8B5CF6"},
-            "Survey Launched":        {"color": "#065F46", "bg": "#F0FDF4", "border": "#10B981"},
-        }
-        CAT_ORDER = ["Not Started", "Onboarding In Progress", "Onboarding Complete", "Survey Launched"]
+        # Apply manual overrides on top of HubSpot-derived status
+        overrides = load_overrides()
+        for r in status_rows:
+            deal_id = r["id"]
+            if deal_id in overrides:
+                r["effective_status"] = overrides[deal_id]["status"]
+                r["is_manual"] = True
+            else:
+                r["effective_status"] = r.get("category", "Not Started")
+                r["is_manual"] = False
 
         # ── Velocity summary ───────────────────────────────────────────────────
         counts = {c: 0 for c in CAT_ORDER}
         for r in status_rows:
-            cat = r.get("category", "Not Started")
+            cat = r["effective_status"]
             if cat in counts:
                 counts[cat] += 1
 
-        overdue = [r for r in status_rows if r.get("category") == "Not Started" and r.get("days_elapsed", 0) >= 30]
+        overdue = [r for r in status_rows if r["effective_status"] == "Not Started"
+                   and r.get("days_elapsed", 0) >= 30]
         c1, c2, c3, c4 = st.columns(4)
         c1.metric("Not Started", counts["Not Started"],
                   delta=f"{len(overdue)} overdue >30d" if overdue else None,
@@ -257,98 +278,68 @@ def main():
         c3.metric("Onboarding Complete", counts["Onboarding Complete"])
         c4.metric("Survey Launched", counts["Survey Launched"])
 
-        # ── Days badge ─────────────────────────────────────────────────────────
-        def _days_badge(days, category):
-            if category == "Survey Launched":
-                return (f'<span style="background:#D1FAE5;color:#065F46;font-weight:700;'
-                        f'font-size:11px;padding:2px 7px;border-radius:10px;">{days}d to launch</span>')
-            elif days >= 60:
-                bg, fg = "#FEE2E2", "#7F1D1D"
-            elif days >= 30:
-                bg, fg = "#FEF3C7", "#92400E"
-            else:
-                bg, fg = "#F3F4F6", "#374151"
-            return (f'<span style="background:{bg};color:{fg};font-weight:700;'
-                    f'font-size:11px;padding:2px 7px;border-radius:10px;">{days}d</span>')
-
-        # ── Table sorted by days descending (most overdue first within each group) ──
+        # ── Build DataFrame for data_editor ───────────────────────────────────
         sorted_rows = sorted(status_rows, key=lambda r: (
-            CAT_ORDER.index(r.get("category", "Not Started"))
-            if r.get("category", "Not Started") in CAT_ORDER else 99,
-            -r.get("days_elapsed", 0)
+            CAT_ORDER.index(r["effective_status"]) if r["effective_status"] in CAT_ORDER else 99,
+            -r.get("days_elapsed", 0),
         ))
 
-        th_cells = "".join([
-            '<th style="text-align:left;padding:8px 12px;font-size:12px;font-weight:600;border-bottom:2px solid #E5E7EB;">Customer</th>',
-            '<th style="text-align:right;padding:8px 12px;font-size:12px;font-weight:600;border-bottom:2px solid #E5E7EB;">ARR</th>',
-            '<th style="text-align:left;padding:8px 12px;font-size:12px;font-weight:600;border-bottom:2px solid #E5E7EB;">Closed Won</th>',
-            '<th style="text-align:center;padding:8px 12px;font-size:12px;font-weight:600;border-bottom:2px solid #E5E7EB;">Days Since Close</th>',
-            '<th style="text-align:left;padding:8px 12px;font-size:12px;font-weight:600;border-bottom:2px solid #E5E7EB;">Current Stage</th>',
-            '<th style="text-align:left;padding:8px 12px;font-size:12px;font-weight:600;border-bottom:2px solid #E5E7EB;">Status</th>',
-        ])
-
-        rows_html2 = ""
-        prev_cat = None
-        for i, r in enumerate(sorted_rows):
-            cat = r.get("category", "Not Started")
-            cfg = CAT_STYLE.get(cat, CAT_STYLE["Not Started"])
+        rows_for_df = []
+        deal_ids = []
+        for r in sorted_rows:
             days = r.get("days_elapsed", 0)
-            arr = r.get("arr", 0)
-            cd = r.get("closedate", "")
-            try:
-                cd_label = datetime.strptime(cd, "%Y-%m-%d").strftime("%b %d, %Y")
-            except Exception:
-                cd_label = cd
-            name = r.get("name", "")
-            short_name = name[:48] + ("…" if len(name) > 48 else "")
-            url = r.get("deal_url", "#")
-            stage = r.get("stage_label", "—")
-            row_bg = "#FFFFFF" if i % 2 == 0 else "#FAFAFA"
+            days_label = f"{days}d to launch" if r["effective_status"] == "Survey Launched" else f"{days}d"
+            rows_for_df.append({
+                "Customer":      r["name"],
+                "ARR":           r["arr"],
+                "Closed Won":    r["closedate"],
+                "Days":          days_label,
+                "HubSpot Stage": r.get("stage_label", "—"),
+                "Status":        r["effective_status"],
+                "View":          r.get("deal_url", ""),
+            })
+            deal_ids.append(r["id"])
 
-            # Section header on category change
-            if cat != prev_cat:
-                prev_cat = cat
-                rows_html2 += (
-                    f'<tr><td colspan="6" style="padding:6px 12px;background:{cfg["bg"]};'
-                    f'font-size:11px;font-weight:700;color:{cfg["color"]};'
-                    f'border-bottom:1px solid {cfg["border"]};border-top:2px solid {cfg["border"]};">'
-                    f'{cat.upper()} — {counts.get(cat, 0)} customers</td></tr>'
-                )
+        df = pd.DataFrame(rows_for_df)
+        original_statuses = df["Status"].tolist()
 
-            cat_badge = (
-                f'<span style="background:{cfg["bg"]};color:{cfg["color"]};'
-                f'border:1px solid {cfg["border"]};font-size:11px;font-weight:600;'
-                f'padding:2px 8px;border-radius:10px;white-space:nowrap;">{cat}</span>'
-            )
-            name_link = (
-                f'<a href="{url}" target="_blank" '
-                f'style="color:#1E40AF;font-weight:600;text-decoration:none;font-size:12px;">'
-                f'{short_name}</a>'
-            )
-            rows_html2 += (
-                f'<tr style="background:{row_bg};">'
-                f'<td style="padding:7px 12px;border-bottom:1px solid #F3F4F6;vertical-align:middle;">{name_link}</td>'
-                f'<td style="padding:7px 12px;border-bottom:1px solid #F3F4F6;text-align:right;font-size:12px;font-weight:600;vertical-align:middle;">${arr:,.0f}</td>'
-                f'<td style="padding:7px 12px;border-bottom:1px solid #F3F4F6;font-size:12px;white-space:nowrap;vertical-align:middle;">{cd_label}</td>'
-                f'<td style="padding:7px 12px;border-bottom:1px solid #F3F4F6;text-align:center;vertical-align:middle;">{_days_badge(days, cat)}</td>'
-                f'<td style="padding:7px 12px;border-bottom:1px solid #F3F4F6;font-size:11px;color:#374151;vertical-align:middle;">{stage}</td>'
-                f'<td style="padding:7px 12px;border-bottom:1px solid #F3F4F6;vertical-align:middle;">{cat_badge}</td>'
-                f'</tr>'
-            )
-
-        status_table_html = (
-            '<div style="overflow-x:auto;margin:12px 0;">'
-            '<table style="border-collapse:collapse;width:100%;background:#FFFFFF;'
-            'border-radius:8px;border:1px solid #E5E7EB;font-family:Inter,sans-serif;">'
-            f'<thead><tr style="background:#F9FAFB;">{th_cells}</tr></thead>'
-            f'<tbody>{rows_html2}</tbody>'
-            '</table></div>'
+        edited_df = st.data_editor(
+            df,
+            column_config={
+                "Customer": st.column_config.TextColumn("Customer", disabled=True, width="large"),
+                "ARR": st.column_config.NumberColumn("ARR", format="$%.0f", disabled=True),
+                "Closed Won": st.column_config.TextColumn("Closed Won", disabled=True),
+                "Days": st.column_config.TextColumn("Days", disabled=True),
+                "HubSpot Stage": st.column_config.TextColumn("HubSpot Stage", disabled=True),
+                "Status": st.column_config.SelectboxColumn(
+                    "Status",
+                    options=CAT_ORDER,
+                    required=True,
+                    width="medium",
+                ),
+                "View": st.column_config.LinkColumn("↗", display_text="View", disabled=True, width="small"),
+            },
+            hide_index=True,
+            use_container_width=True,
+            key="onboarding_status_editor",
         )
-        st.markdown(status_table_html, unsafe_allow_html=True)
+
+        # Detect changes → persist overrides
+        new_statuses = edited_df["Status"].tolist()
+        if new_statuses != original_statuses:
+            for i, (orig, new) in enumerate(zip(original_statuses, new_statuses)):
+                if orig != new:
+                    overrides[deal_ids[i]] = {
+                        "status": new,
+                        "updated_at": datetime.now().isoformat(),
+                    }
+            save_overrides(overrides)
+            st.rerun()
+
+        manual_count = sum(1 for r in status_rows if r.get("is_manual"))
         st.caption(
-            "Sorted by status group, then by days since close (longest first). "
-            "Red badge = 60+ days. Yellow = 30–59 days. "
-            "Survey Launched shows days from close to launch."
+            f"Status dropdown saves locally. {manual_count} manual override{'s' if manual_count != 1 else ''} active. "
+            "Days = from Closed Won to today (or to survey launch for launched customers)."
         )
     else:
         st.info("Re-run `python scripts/fetch_hubspot_onboarding.py` to populate onboarding status.")
