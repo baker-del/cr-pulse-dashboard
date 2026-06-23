@@ -61,8 +61,10 @@ PRIORITY_GROUPS = {
         "label": "3️⃣ Grow in AEC & Accounting",
         "kpis": [
             'Total New ARR Forecast',
+            'New Logo ARR Forecast',
             'New Logo ARR',
             'Expansion ARR',
+            'New Logo Pipeline Created Forecast',
             'New Logo Pipeline Created',
             'SAL New Created',
             'AEC New Created',
@@ -70,11 +72,14 @@ PRIORITY_GROUPS = {
             'SAL Pipeline',
             'AEC Pipeline',
             'Expansion Pipeline (Next 180 Days)',
+            'SQL Forecast',
             'SQL',
             'Cost/Inbound SQL',
+            'Win Rate Forecast',
             'Win Rate (Overall)',
             'Win Rate (SAL)',
             'Win Rate (AEC)',
+            'ACV Forecast',
             'ACV (Overall)',
             'ACV (SAL)',
             'ACV (AEC)',
@@ -659,6 +664,8 @@ def _kpi_comments(df, name):
 def render_exec_summary(df, quarter, year, pct_elapsed, days_left):
     """Render an auto-generated executive summary from the latest KPI data."""
     # Pull key metrics
+    nl_arr_forecast = _kpi_val(df, 'New Logo ARR Forecast')
+    nl_arr_forecast_target = _kpi_target(df, 'New Logo ARR Forecast')
     nl_arr = _kpi_val(df, 'New Logo ARR')
     nl_target = _kpi_target(df, 'New Logo ARR')
     exp_arr = _kpi_val(df, 'Expansion ARR')
@@ -666,16 +673,16 @@ def render_exec_summary(df, quarter, year, pct_elapsed, days_left):
     exp_target = _kpi_target(df, 'Expansion ARR')
     total_forecast = _kpi_val(df, 'Total New ARR Forecast')
     total_target = _kpi_target(df, 'Total New ARR Forecast')
-    sqls = _kpi_val(df, 'SQL')
-    sql_target = _kpi_target(df, 'SQL')
-    pipeline = _kpi_val(df, 'New Logo Pipeline Created')
-    pipeline_target = _kpi_target(df, 'New Logo Pipeline Created')
-    wr_overall = _kpi_val(df, 'Win Rate (Overall)')
-    wr_target = _kpi_target(df, 'Win Rate (Overall)')
+    sqls = _kpi_val(df, 'SQL Forecast') or _kpi_val(df, 'SQL')
+    sql_target = _kpi_target(df, 'SQL Forecast') or _kpi_target(df, 'SQL')
+    pipeline = _kpi_val(df, 'New Logo Pipeline Created Forecast') or _kpi_val(df, 'New Logo Pipeline Created')
+    pipeline_target = _kpi_target(df, 'New Logo Pipeline Created Forecast') or _kpi_target(df, 'New Logo Pipeline Created')
+    wr_overall = _kpi_val(df, 'Win Rate Forecast') or _kpi_val(df, 'Win Rate (Overall)')
+    wr_target = _kpi_target(df, 'Win Rate Forecast') or _kpi_target(df, 'Win Rate (Overall)')
     wr_sal = _kpi_val(df, 'Win Rate (SAL)')
     wr_aec = _kpi_val(df, 'Win Rate (AEC)')
-    acv = _kpi_val(df, 'ACV (Overall)')
-    acv_target = _kpi_target(df, 'ACV (Overall)')
+    acv = _kpi_val(df, 'ACV Forecast') or _kpi_val(df, 'ACV (Overall)')
+    acv_target = _kpi_target(df, 'ACV Forecast') or _kpi_target(df, 'ACV (Overall)')
     grr = _kpi_val(df, 'GRR')
     nrr = _kpi_val(df, 'NRR')
     exp_180 = _kpi_val(df, 'Expansion Pipeline (Next 180 Days)')
@@ -710,24 +717,26 @@ def render_exec_summary(df, quarter, year, pct_elapsed, days_left):
             st.metric("ARR Forecast", f"${total_forecast:,.0f}", f"{pct:.0f}% of target",
                       delta_color="inverse" if total_forecast < total_target else "normal")
     with m2:
-        if nl_arr is not None:
-            delta = f"{nl_arr/nl_target*100:.0f}% of target" if nl_target else ""
-            st.metric("New Logo ARR", f"${nl_arr:,.0f}", delta,
-                      delta_color="inverse" if nl_target and nl_arr < nl_target else "normal")
+        nl_f = nl_arr_forecast if nl_arr_forecast is not None else nl_arr
+        nl_f_tgt = nl_arr_forecast_target if nl_arr_forecast_target is not None else nl_target
+        if nl_f is not None:
+            delta = f"{nl_f/nl_f_tgt*100:.0f}% of target" if nl_f_tgt else ""
+            st.metric("New Logo ARR Forecast", f"${nl_f:,.0f}", delta,
+                      delta_color="inverse" if nl_f_tgt and nl_f < nl_f_tgt else "normal")
     with m3:
         if pipeline is not None:
             delta = f"{pipeline/pipeline_target*100:.0f}% of target" if pipeline_target else ""
-            st.metric("Pipeline Created", f"${pipeline:,.0f}", delta,
+            st.metric("Pipeline Forecast", f"${pipeline:,.0f}", delta,
                       delta_color="inverse" if pipeline_target and pipeline < pipeline_target else "normal")
     with m4:
         if wr_overall is not None:
             delta = f"Target: {wr_target:.0f}%" if wr_target else ""
-            st.metric("Win Rate", f"{wr_overall:.1f}%", delta,
+            st.metric("Win Rate Forecast", f"{wr_overall:.1f}%", delta,
                       delta_color="inverse" if wr_target and wr_overall < wr_target else "normal")
     with m5:
         if sqls is not None:
             delta = f"{sqls/sql_target*100:.0f}% of {int(sql_target)}" if sql_target else ""
-            st.metric("SQLs", f"{int(sqls)}", delta,
+            st.metric("SQL Forecast", f"{int(sqls)}", delta,
                       delta_color="inverse" if sql_target and sqls < sql_target else "normal")
 
     # ROW 2: Retention & Expansion
@@ -762,7 +771,7 @@ def render_exec_summary(df, quarter, year, pct_elapsed, days_left):
     with r5:
         if acv is not None:
             delta = f"Target: ${acv_target:,.0f}" if acv_target else ""
-            st.metric("ACV (Median)", f"${acv:,.0f}", delta,
+            st.metric("ACV Forecast", f"${acv:,.0f}", delta,
                       delta_color="inverse" if acv_target and acv < acv_target else "normal")
 
     # ── Plain-language narrative (bullet list, consistent formatting) ────
@@ -788,12 +797,12 @@ def render_exec_summary(df, quarter, year, pct_elapsed, days_left):
             )
 
     # New logo + expansion
-    if nl_arr is not None and nl_target:
-        nl_gap = nl_target - nl_arr
+    if nl_f is not None and nl_f_tgt:
+        nl_gap = nl_f_tgt - nl_f
         if nl_gap > 0:
-            bullets.append(f"New logo ARR is ${nl_arr:,.0f} — ${nl_gap:,.0f} away from the ${nl_target:,.0f} goal.")
+            bullets.append(f"New logo ARR forecast is ${nl_f:,.0f} — ${nl_gap:,.0f} away from the ${nl_f_tgt:,.0f} goal.")
         else:
-            bullets.append(f"New logo ARR is ${nl_arr:,.0f}, beating the ${nl_target:,.0f} target.")
+            bullets.append(f"New logo ARR forecast is ${nl_f:,.0f}, beating the ${nl_f_tgt:,.0f} target.")
 
     if exp_arr is not None and exp_target:
         exp_gap = exp_target - exp_arr
@@ -806,12 +815,13 @@ def render_exec_summary(df, quarter, year, pct_elapsed, days_left):
     if pipeline is not None and pipeline_target:
         pipe_pct = pipeline / pipeline_target * 100
         if pipe_pct >= 100:
-            bullets.append(
-                f"Pipeline created is ${pipeline:,.0f}, ahead of the ${pipeline_target:,.0f} target. "
-                f"Top of funnel is not the issue."
-            )
-        elif pipe_pct >= 85:
-            bullets.append(f"Pipeline created is ${pipeline:,.0f} ({pipe_pct:.0f}% of target). Healthy top of funnel.")
+            bullets.append(f"Pipeline forecast is ${pipeline:,.0f}, on pace to beat the ${pipeline_target:,.0f} target.")
+        elif pipe_pct >= 80:
+            bullets.append(f"Pipeline forecast is ${pipeline:,.0f} ({pipe_pct:.0f}% of target). Healthy momentum.")
+        else:
+            bullets.append(f"Pipeline forecast is ${pipeline:,.0f} ({pipe_pct:.0f}% of target) — below pace.")
+    elif pipeline is not None:
+        bullets.append(f"Pipeline forecast: ${pipeline:,.0f}.")
 
     # Win rate
     if wr_overall is not None and wr_target:
