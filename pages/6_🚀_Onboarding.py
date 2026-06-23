@@ -136,28 +136,35 @@ def main():
         },
     ]
 
-    # Build pivot: month_key → stage_label → {n, arr}
-    pivot = defaultdict(lambda: defaultdict(lambda: {"n": 0, "arr": 0}))
+    # Build pivot: month_key → stage_label → [names]
+    pivot = defaultdict(lambda: defaultdict(list))
     month_keys_seen = []
     for d in deals:
         mk    = d["month_key"]
         label = d.get("stage_label", "—")
-        pivot[mk][label]["n"]   += 1
-        pivot[mk][label]["arr"] += d.get("arr", 0)
+        # Clean name: strip after " - " and truncate
+        raw_name = d["name"]
+        short    = raw_name.split(" - ")[0].replace("(WPG)", "").strip()
+        if len(short) > 28:
+            short = short[:27] + "…"
+        arr      = d.get("arr", 0)
+        arr_str  = f"${arr/1000:.0f}K" if arr >= 1000 else f"${arr:.0f}"
+        pivot[mk][label].append(f"{short} ({arr_str})")
         if mk not in month_keys_seen:
             month_keys_seen.append(mk)
     month_keys_seen = sorted(month_keys_seen)
 
-    def group_val(mk, group):
-        n   = sum(pivot[mk][s]["n"]   for s in group["stages"])
-        arr = sum(pivot[mk][s]["arr"] for s in group["stages"])
-        return n, arr
+    def group_names(mk, group):
+        names = []
+        for s in group["stages"]:
+            names.extend(pivot[mk][s])
+        return names
 
     # Header: Month + one col per stage group + Total
-    th = '<th style="text-align:left;padding:7px 12px;font-size:12px;border-bottom:2px solid #E5E7EB;min-width:100px;">Month</th>'
+    th = '<th style="text-align:left;padding:7px 12px;font-size:12px;border-bottom:2px solid #E5E7EB;min-width:90px;">Month</th>'
     for g in STAGE_GROUPS:
         th += (
-            f'<th style="text-align:center;padding:7px 12px;font-size:12px;'
+            f'<th style="text-align:left;padding:7px 12px;font-size:12px;'
             f'border-bottom:2px solid #E5E7EB;color:{g["color"]};">{g["label"]}</th>'
         )
     th += '<th style="text-align:center;padding:7px 12px;font-size:12px;border-bottom:2px solid #E5E7EB;font-weight:700;">Total</th>'
@@ -169,31 +176,38 @@ def main():
         is_past = mk < today.strftime("%Y-%m")
         mlabel  = datetime.strptime(mk, "%Y-%m").strftime("%b %Y")
         row_bg  = "#F0FDF4" if is_now else ("#FAFAFA" if is_past else "#FFFFFF")
-        row_n   = sum(group_val(mk, g)[0] for g in STAGE_GROUPS)
-        row_arr = sum(group_val(mk, g)[1] for g in STAGE_GROUPS)
-        cells = (
+        row_n   = sum(len(group_names(mk, g)) for g in STAGE_GROUPS)
+        cells   = (
             f'<td style="padding:7px 12px;font-size:12px;font-weight:600;'
-            f'white-space:nowrap;border-bottom:1px solid #F3F4F6;">'
+            f'white-space:nowrap;border-bottom:1px solid #F3F4F6;vertical-align:top;">'
             f'{"📍 " if is_now else ""}{mlabel}</td>'
         )
         for g in STAGE_GROUPS:
-            n, arr = group_val(mk, g)
-            cell_bg = g["bg"] if n else "transparent"
-            val_html = f'<b>{n}</b>' if n else '<span style="color:#D1D5DB;">—</span>'
+            names   = group_names(mk, g)
+            cell_bg = g["bg"] if names else "transparent"
+            if names:
+                lines = "".join(
+                    f'<div style="padding:1px 0;border-bottom:1px solid rgba(0,0,0,0.05);'
+                    f'white-space:nowrap;">{n}</div>'
+                    for n in names
+                )
+            else:
+                lines = '<span style="color:#D1D5DB;">—</span>'
             cells += (
-                f'<td style="text-align:center;padding:7px 12px;font-size:12px;'
-                f'border-bottom:1px solid #F3F4F6;background:{cell_bg};">{val_html}</td>'
+                f'<td style="text-align:left;padding:7px 12px;font-size:11px;'
+                f'border-bottom:1px solid #F3F4F6;background:{cell_bg};vertical-align:top;">'
+                f'{lines}</td>'
             )
         cells += (
             f'<td style="text-align:center;padding:7px 12px;font-size:12px;font-weight:700;'
-            f'border-bottom:1px solid #F3F4F6;"><b>{row_n}</b></td>'
+            f'border-bottom:1px solid #F3F4F6;vertical-align:top;"><b>{row_n}</b></td>'
         )
         rows_html += f'<tr style="background:{row_bg};">{cells}</tr>'
 
-    # Totals footer
+    # Totals footer — counts only
     foot_cells = '<td style="padding:7px 12px;font-size:12px;font-weight:700;border-top:2px solid #E5E7EB;">Total</td>'
     for g in STAGE_GROUPS:
-        col_n = sum(group_val(mk, g)[0] for mk in month_keys_seen)
+        col_n = sum(len(group_names(mk, g)) for mk in month_keys_seen)
         foot_cells += (
             f'<td style="text-align:center;padding:7px 12px;font-size:12px;font-weight:700;'
             f'border-top:2px solid #E5E7EB;"><b>{col_n}</b></td>'
