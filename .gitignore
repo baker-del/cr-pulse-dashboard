@@ -22,3 +22,4 @@ venv/
 
 # Streamlit local secrets (cloud uses Streamlit Secrets UI)
 .streamlit/secrets.toml
+!hubspot_onboarding.json
