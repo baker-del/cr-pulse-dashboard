@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-06-22T18:25:05.131921",
+  "fetched_at": "2026-06-22T18:33:17.801400",
   "window_start": "2026-03-24",
   "window_end": "2026-09-20",
   "deals": [
@@ -497,7 +497,7 @@
       "category": "Not Started",
       "deal_url": "https://app.hubspot.com/contacts/2787478/deal/52036399773",
       "vertical": "Association",
-      "csm": "Ryan Suydam"
+      "csm": "Jenni Schwittay"
     },
     {
       "id": "47536939173",
@@ -511,7 +511,7 @@
       "category": "Not Started",
       "deal_url": "https://app.hubspot.com/contacts/2787478/deal/47536939173",
       "vertical": "Architecture & Planning",
-      "csm": "Pete Cowing"
+      "csm": "\u2014"
     },
     {
       "id": "52218430019",
@@ -525,7 +525,7 @@
       "category": "Not Started",
       "deal_url": "https://app.hubspot.com/contacts/2787478/deal/52218430019",
       "vertical": "Accounting",
-      "csm": "Zach Panos"
+      "csm": "\u2014"
     },
     {
       "id": "47172420751",
@@ -539,7 +539,7 @@
       "category": "Not Started",
       "deal_url": "https://app.hubspot.com/contacts/2787478/deal/47172420751",
       "vertical": "Construction",
-      "csm": "Pete Cowing"
+      "csm": "\u2014"
     },
     {
       "id": "54326147948",
@@ -553,7 +553,7 @@
       "category": "Not Started",
       "deal_url": "https://app.hubspot.com/contacts/2787478/deal/54326147948",
       "vertical": "Staffing",
-      "csm": "Amber Moreno"
+      "csm": "\u2014"
     },
     {
       "id": "39659736593",
@@ -567,7 +567,7 @@
       "category": "Not Started",
       "deal_url": "https://app.hubspot.com/contacts/2787478/deal/39659736593",
       "vertical": "Staffing",
-      "csm": "Eric Gregg"
+      "csm": "\u2014"
     },
     {
       "id": "47453627170",
@@ -581,7 +581,7 @@
       "category": "Survey Launched",
       "deal_url": "https://app.hubspot.com/contacts/2787478/deal/47453627170",
       "vertical": "Engineering",
-      "csm": "Ryan Suydam"
+      "csm": "Zach Hankin"
     },
     {
       "id": "45429627259",
@@ -595,7 +595,7 @@
       "category": "Not Started",
       "deal_url": "https://app.hubspot.com/contacts/2787478/deal/45429627259",
       "vertical": "Legal",
-      "csm": "Ryanne Nelson"
+      "csm": "\u2014"
     },
     {
       "id": "56214774092",
@@ -609,7 +609,7 @@
       "category": "Not Started",
       "deal_url": "https://app.hubspot.com/contacts/2787478/deal/56214774092",
       "vertical": "Legal",
-      "csm": "Ryanne Nelson"
+      "csm": "\u2014"
     },
     {
       "id": "55624090701",
@@ -623,7 +623,7 @@
       "category": "Not Started",
       "deal_url": "https://app.hubspot.com/contacts/2787478/deal/55624090701",
       "vertical": "Legal",
-      "csm": "Ryanne Nelson"
+      "csm": "\u2014"
     },
     {
       "id": "57905671431",
@@ -637,7 +637,7 @@
       "category": "Not Started",
       "deal_url": "https://app.hubspot.com/contacts/2787478/deal/57905671431",
       "vertical": "\u2014",
-      "csm": "Zach Panos"
+      "csm": "\u2014"
     },
     {
       "id": "43542926427",
@@ -651,7 +651,7 @@
       "category": "Onboarding In Progress",
       "deal_url": "https://app.hubspot.com/contacts/2787478/deal/43542926427",
       "vertical": "Engineering",
-      "csm": "Matthew Ringquist"
+      "csm": "Zach Panos"
     },
     {
       "id": "58136126535",
@@ -665,7 +665,7 @@
       "category": "Onboarding In Progress",
       "deal_url": "https://app.hubspot.com/contacts/2787478/deal/58136126535",
       "vertical": "Financial Advising",
-      "csm": "Zoe Tyson"
+      "csm": "Bernardo Mattos"
     },
     {
       "id": "46291934839",
@@ -679,7 +679,7 @@
       "category": "Onboarding In Progress",
       "deal_url": "https://app.hubspot.com/contacts/2787478/deal/46291934839",
       "vertical": "Accounting",
-      "csm": "Zoe Tyson"
+      "csm": "Bernardo Mattos"
     },
     {
       "id": "58900575835",
@@ -707,7 +707,7 @@
       "category": "Not Started",
       "deal_url": "https://app.hubspot.com/contacts/2787478/deal/57856246820",
       "vertical": "Accounting",
-      "csm": "Amber Moreno"
+      "csm": "\u2014"
     },
     {
       "id": "55624090023",
@@ -721,7 +721,7 @@
       "category": "Not Started",
       "deal_url": "https://app.hubspot.com/contacts/2787478/deal/55624090023",
       "vertical": "Legal",
-      "csm": "Shannon Pope"
+      "csm": "\u2014"
     },
     {
       "id": "55624030262",
@@ -735,7 +735,7 @@
       "category": "Not Started",
       "deal_url": "https://app.hubspot.com/contacts/2787478/deal/55624030262",
       "vertical": "Legal",
-      "csm": "Shannon Pope"
+      "csm": "\u2014"
     },
     {
       "id": "59915354481",
@@ -749,7 +749,7 @@
       "category": "Not Started",
       "deal_url": "https://app.hubspot.com/contacts/2787478/deal/59915354481",
       "vertical": "Accounting",
-      "csm": "Amber Moreno"
+      "csm": "\u2014"
     },
     {
       "id": "57099951260",
@@ -763,7 +763,7 @@
       "category": "Not Started",
       "deal_url": "https://app.hubspot.com/contacts/2787478/deal/57099951260",
       "vertical": "Staffing",
-      "csm": "Amber Moreno"
+      "csm": "\u2014"
     },
     {
       "id": "59369344038",
@@ -777,7 +777,7 @@
       "category": "Not Started",
       "deal_url": "https://app.hubspot.com/contacts/2787478/deal/59369344038",
       "vertical": "Accounting",
-      "csm": "Zoe Tyson"
+      "csm": "Kirsten Handal"
     },
     {
       "id": "60275608079",
@@ -791,7 +791,7 @@
       "category": "Not Started",
       "deal_url": "https://app.hubspot.com/contacts/2787478/deal/60275608079",
       "vertical": "Staffing",
-      "csm": "Scheri Smith"
+      "csm": "\u2014"
     },
     {
       "id": "60177469340",
@@ -805,7 +805,7 @@
       "category": "Onboarding In Progress",
       "deal_url": "https://app.hubspot.com/contacts/2787478/deal/60177469340",
       "vertical": "Architecture & Planning",
-      "csm": "Shannon Pope"
+      "csm": "Zach Panos"
     },
     {
       "id": "58208806283",
@@ -819,7 +819,7 @@
       "category": "Not Started",
       "deal_url": "https://app.hubspot.com/contacts/2787478/deal/58208806283",
       "vertical": "Construction",
-      "csm": "Ryan Olson"
+      "csm": "\u2014"
     },
     {
       "id": "60672965888",
@@ -833,7 +833,7 @@
       "category": "Not Started",
       "deal_url": "https://app.hubspot.com/contacts/2787478/deal/60672965888",
       "vertical": "Marketing/Creative",
-      "csm": "Zoe Tyson"
+      "csm": "Kirsten Handal"
     },
     {
       "id": "54223542903",
@@ -847,7 +847,7 @@
       "category": "Not Started",
       "deal_url": "https://app.hubspot.com/contacts/2787478/deal/54223542903",
       "vertical": "Construction",
-      "csm": "Matthew Ringquist"
+      "csm": "\u2014"
     },
     {
       "id": "57830312365",
@@ -861,7 +861,7 @@
       "category": "Not Started",
       "deal_url": "https://app.hubspot.com/contacts/2787478/deal/57830312365",
       "vertical": "Consulting",
-      "csm": "Ryan Olson"
+      "csm": "\u2014"
     },
     {
       "id": "61038823271",
@@ -875,7 +875,7 @@
       "category": "Not Started",
       "deal_url": "https://app.hubspot.com/contacts/2787478/deal/61038823271",
       "vertical": "Nonprofit/Government",
-      "csm": "Zach Hankin"
+      "csm": "\u2014"
     }
   ]
 }

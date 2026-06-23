@@ -205,12 +205,14 @@ def fetch_onboarding_status(owners: dict, today: date) -> list:
         stage_id = p.get("dealstage", "")
         ob_cd = (p.get("closedate") or "")[:10]
         nm = _norm(p.get("dealname", ""))
+        owner_id = str(p.get("hubspot_owner_id") or "")
         ob_lookup[nm] = {
             "stage_id":    stage_id,
             "stage_label": ONBOARDING_STAGE_MAP.get(stage_id, stage_id),
             "category":    ONBOARDING_CATEGORY_MAP.get(stage_id, "Unknown"),
             "ob_closedate": ob_cd,
             "ob_deal_id":  r["id"],
+            "csm":         owners.get(owner_id, "—"),
         }
 
     def _find_ob(sale_name: str):
@@ -290,9 +292,7 @@ def fetch_onboarding_status(owners: dict, today: date) -> list:
             stage_label = ob["stage_label"]
             category = ob["category"]
             ob_cd_str = ob.get("ob_closedate", "")
-            # For Survey Launched: days = closed-won → launch date (milestone time)
-            # For Onboarding Complete: days = closed-won → today (still waiting on survey)
-            # All others: days = closed-won → today
+            csm = ob.get("csm", "—")
             if stage_id == "1334736030" and ob_cd_str:
                 launch_dt = datetime.strptime(ob_cd_str, "%Y-%m-%d").date()
                 days_elapsed = max((launch_dt - cd).days, 0)
@@ -304,6 +304,7 @@ def fetch_onboarding_status(owners: dict, today: date) -> list:
             category = "Not Started"
             days_elapsed = (today - cd).days
             stage_order = 0
+            csm = "—"
 
         status_rows.append({
             "id":           d["id"],
@@ -317,7 +318,7 @@ def fetch_onboarding_status(owners: dict, today: date) -> list:
             "category":     category,
             "deal_url":     d["deal_url"],
             "vertical":     d["vertical"],
-            "csm":          d["owner"],
+            "csm":          csm,
         })
 
     return status_rows

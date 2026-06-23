@@ -294,6 +294,7 @@ def main():
                 "ARR":           r["arr"],
                 "Closed Won":    r["closedate"],
                 "Days":          days_label,
+                "CSM":           r.get("csm", "—"),
                 "HubSpot Stage": r.get("stage_label", "—"),
                 "Status":        r["effective_status"],
                 "View":          r.get("deal_url", ""),
@@ -310,6 +311,7 @@ def main():
                 "ARR": st.column_config.NumberColumn("ARR", format="$%.0f", disabled=True),
                 "Closed Won": st.column_config.TextColumn("Closed Won", disabled=True),
                 "Days": st.column_config.TextColumn("Days", disabled=True),
+                "CSM": st.column_config.TextColumn("CSM", disabled=True, width="small"),
                 "HubSpot Stage": st.column_config.TextColumn("HubSpot Stage", disabled=True),
                 "Status": st.column_config.SelectboxColumn(
                     "Status",
