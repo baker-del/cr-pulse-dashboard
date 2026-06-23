@@ -25,7 +25,7 @@ CLOSED_WON_LABEL = "Closed Won"
 
 
 @st.cache_data(ttl=300)
-def load_data():
+def load_data(mtime: float):
     if not DATA_FILE.exists():
         return None, []
     with open(DATA_FILE) as f:
@@ -88,7 +88,8 @@ def main():
 
     st.title("🚀 Customer Onboarding")
 
-    fetched_at, deals = load_data()
+    mtime = DATA_FILE.stat().st_mtime if DATA_FILE.exists() else 0.0
+    fetched_at, deals = load_data(mtime)
 
     if fetched_at:
         try:
@@ -178,35 +179,28 @@ def main():
         for g in STAGE_GROUPS:
             n, arr = group_val(mk, g)
             cell_bg = g["bg"] if n else "transparent"
-            val_html = (
-                f'<b>{n}</b><div style="font-size:10px;color:#6B7280;">${arr:,.0f}</div>'
-                if n else '<span style="color:#D1D5DB;">—</span>'
-            )
+            val_html = f'<b>{n}</b>' if n else '<span style="color:#D1D5DB;">—</span>'
             cells += (
                 f'<td style="text-align:center;padding:7px 12px;font-size:12px;'
                 f'border-bottom:1px solid #F3F4F6;background:{cell_bg};">{val_html}</td>'
             )
         cells += (
             f'<td style="text-align:center;padding:7px 12px;font-size:12px;font-weight:700;'
-            f'border-bottom:1px solid #F3F4F6;">'
-            f'<b>{row_n}</b><div style="font-size:10px;color:#6B7280;">${row_arr:,.0f}</div></td>'
+            f'border-bottom:1px solid #F3F4F6;"><b>{row_n}</b></td>'
         )
         rows_html += f'<tr style="background:{row_bg};">{cells}</tr>'
 
     # Totals footer
     foot_cells = '<td style="padding:7px 12px;font-size:12px;font-weight:700;border-top:2px solid #E5E7EB;">Total</td>'
     for g in STAGE_GROUPS:
-        col_n   = sum(group_val(mk, g)[0] for mk in month_keys_seen)
-        col_arr = sum(group_val(mk, g)[1] for mk in month_keys_seen)
+        col_n = sum(group_val(mk, g)[0] for mk in month_keys_seen)
         foot_cells += (
             f'<td style="text-align:center;padding:7px 12px;font-size:12px;font-weight:700;'
-            f'border-top:2px solid #E5E7EB;"><b>{col_n}</b>'
-            f'<div style="font-size:10px;color:#6B7280;">${col_arr:,.0f}</div></td>'
+            f'border-top:2px solid #E5E7EB;"><b>{col_n}</b></td>'
         )
     foot_cells += (
         f'<td style="text-align:center;padding:7px 12px;font-size:12px;font-weight:700;'
-        f'border-top:2px solid #E5E7EB;"><b>{len(deals)}</b>'
-        f'<div style="font-size:10px;color:#6B7280;">${total_arr:,.0f}</div></td>'
+        f'border-top:2px solid #E5E7EB;"><b>{len(deals)}</b></td>'
     )
 
     table_html = (
