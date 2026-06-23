@@ -44,10 +44,9 @@ CLOSED_WON_LABEL = "Closed Won"
 @st.cache_data(ttl=300)
 def load_data(mtime: float):
     if not DATA_FILE.exists():
-        return None, [], []
+        return {"fetched_at": None, "deals": [], "onboarding_status": [], "stage_medians": {}}
     with open(DATA_FILE) as f:
-        raw = json.load(f)
-    return raw.get("fetched_at", ""), raw.get("deals", []), raw.get("onboarding_status", [])
+        return json.load(f)
 
 
 def _months_in_window(start: date, end: date):
@@ -106,7 +105,11 @@ def main():
     st.title("🚀 Customer Onboarding")
 
     mtime = DATA_FILE.stat().st_mtime if DATA_FILE.exists() else 0.0
-    fetched_at, deals, status_rows = load_data(mtime)
+    raw          = load_data(mtime)
+    fetched_at   = raw.get("fetched_at")
+    deals        = raw.get("deals", [])
+    status_rows  = raw.get("onboarding_status", [])
+    stage_medians = raw.get("stage_medians", {})
 
     if fetched_at:
         try:
@@ -277,6 +280,19 @@ def main():
         c2.metric("Onboarding In Progress", counts["Onboarding In Progress"])
         c3.metric("Onboarding Complete", counts["Onboarding Complete"])
         c4.metric("Survey Launched", counts["Survey Launched"])
+
+        # ── Median time to each milestone ──────────────────────────────────────
+        def _med(label):
+            v = stage_medians.get(label)
+            return f"{v}d" if v is not None else "—"
+
+        st.caption("Median days from Closed Won to each onboarding milestone")
+        m1, m2, m3, m4, m5 = st.columns(5)
+        m1.metric("→ Handoff",        _med("Handoff to Onboarding"))
+        m2.metric("→ Kickoff",         _med("Client Kickoff"))
+        m3.metric("→ Plan Complete",   _med("Onboarding Plan Completed"))
+        m4.metric("→ Onboarding Done", _med("Onboarding Complete"))
+        m5.metric("→ Survey Launch",   _med("Survey Launch"))
 
         # ── Build DataFrame for data_editor ───────────────────────────────────
         sorted_rows = sorted(status_rows, key=lambda r: (

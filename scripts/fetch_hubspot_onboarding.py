@@ -179,8 +179,37 @@ CLOSED_WON_PIPELINES = {
 }
 PIPELINE_LABEL = {"default": "New Logo", "47062345": "Expansion", "757781604": "ClientSavvy"}
 
+DEAL_URL = "https://api.hubapi.com/crm/v3/objects/deals"
 
-def fetch_onboarding_status(owners: dict, today: date) -> list:
+# Milestone stages for median-time calculation (in order)
+MEDIAN_STAGES = [
+    ("1334736025", "Handoff to Onboarding"),
+    ("1334736026", "Client Kickoff"),
+    ("1334736027", "Onboarding Plan Completed"),
+    ("1334895634", "Onboarding Complete"),
+    ("1334736030", "Survey Launch"),
+]
+
+
+def fetch_stage_history(deal_id: str) -> dict:
+    """Return {stage_id: first_entry_date_str} from deal stage history."""
+    resp = requests.get(
+        f"{DEAL_URL}/{deal_id}",
+        headers=headers(),
+        params={"propertiesWithHistory": "dealstage"},
+        timeout=15,
+    )
+    history = resp.json().get("propertiesWithHistory", {}).get("dealstage", [])
+    stage_dates: dict = {}
+    for h in reversed(history):  # oldest first
+        sid = h.get("value", "")
+        ts  = (h.get("timestamp") or "")[:10]
+        if sid and ts and sid not in stage_dates:
+            stage_dates[sid] = ts
+    return stage_dates
+
+
+def fetch_onboarding_status(owners: dict, today: date) -> tuple:
     """Cross-reference 2026 YTD closed-won deals against the onboarding pipeline."""
 
     # 1. Pull all deals in the onboarding pipeline
@@ -212,7 +241,14 @@ def fetch_onboarding_status(owners: dict, today: date) -> list:
             "ob_closedate": ob_cd,
             "ob_deal_id":  r["id"],
             "csm":         owners.get(owner_id, "—"),
+            "stage_dates": {},
         }
+
+    # Fetch stage history for each onboarding deal
+    print("  Fetching stage history...")
+    for ob in ob_lookup.values():
+        ob["stage_dates"] = fetch_stage_history(ob["ob_deal_id"])
+        time.sleep(0.05)
 
     def _find_ob(sale_name: str):
         nm = _norm(sale_name)
@@ -281,6 +317,9 @@ def fetch_onboarding_status(owners: dict, today: date) -> list:
         "1334895634": 7, "1334736030": 8, "1334736031": 0,
     }
 
+    # Accumulators for median-time calculation (keyed by stage_id)
+    stage_days_acc: dict = {sid: [] for sid, _ in MEDIAN_STAGES}
+
     # 3. Cross-reference
     status_rows = []
     for d in all_sales:
@@ -298,6 +337,18 @@ def fetch_onboarding_status(owners: dict, today: date) -> list:
             else:
                 days_elapsed = (today - cd).days
             stage_order = STAGE_ORDER.get(stage_id, 0)
+
+            # Accumulate days-to-stage for median calculation
+            stage_dates = ob.get("stage_dates", {})
+            for sid, _ in MEDIAN_STAGES:
+                if sid in stage_dates:
+                    try:
+                        stage_dt = datetime.strptime(stage_dates[sid], "%Y-%m-%d").date()
+                        d_days = (stage_dt - cd).days
+                        if d_days >= 0:
+                            stage_days_acc[sid].append(d_days)
+                    except ValueError:
+                        pass
         else:
             stage_label = "—"
             category = "Not Started"
@@ -320,7 +371,15 @@ def fetch_onboarding_status(owners: dict, today: date) -> list:
             "csm":          csm,
         })
 
-    return status_rows
+    # 4. Compute medians (require ≥2 data points)
+    import statistics
+    stage_medians = {}
+    for sid, label in MEDIAN_STAGES:
+        vals = stage_days_acc[sid]
+        stage_medians[label] = round(statistics.median(vals)) if len(vals) >= 2 else None
+    print(f"  Stage medians (days from closed won): {stage_medians}")
+
+    return status_rows, stage_medians
 
 
 def main():
@@ -364,17 +423,18 @@ def main():
         print(f"  [{d['month_label']:8}] [{d['pipeline']:9}] {d['name'][:45]:45} ${d['arr']:>9,.0f}  {d['stage_label']}")
 
     print("\nFetching onboarding status cross-reference...")
-    onboarding_status = fetch_onboarding_status(owners, today)
+    onboarding_status, stage_medians = fetch_onboarding_status(owners, today)
     print(f"✅ {len(onboarding_status)} customers in onboarding status table")
     for r in onboarding_status:
         print(f"  {r['closedate']} | {r['days_elapsed']:>4}d | {r['category']:<20} | {r['stage_label']:<30} | {r['name'][:50]}")
 
     output = {
-        "fetched_at":       datetime.now().isoformat(),
-        "window_start":     past,
-        "window_end":       future,
-        "deals":            deals,
+        "fetched_at":        datetime.now().isoformat(),
+        "window_start":      past,
+        "window_end":        future,
+        "deals":             deals,
         "onboarding_status": onboarding_status,
+        "stage_medians":     stage_medians,
     }
 
     out_path = ROOT / "hubspot_onboarding.json"

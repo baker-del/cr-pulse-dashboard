@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-06-23T08:39:25.722433",
+  "fetched_at": "2026-06-23T08:49:28.689436",
   "window_start": "2026-03-25",
   "window_end": "2026-09-21",
   "deals": [
@@ -778,5 +778,12 @@
       "vertical": "Legal",
       "csm": "\u2014"
     }
-  ]
+  ],
+  "stage_medians": {
+    "Handoff to Onboarding": 9,
+    "Client Kickoff": 66,
+    "Onboarding Plan Completed": 45,
+    "Onboarding Complete": null,
+    "Survey Launch": 78
+  }
 }
