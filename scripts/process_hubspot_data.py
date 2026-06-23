@@ -311,7 +311,6 @@ def process_hubspot_deals(deals_data, quarter="Q1", year=2026):
     aec_roi_call = 0        # AEC deals that entered ROI Call Completed (ClientSavvy Pipeline)
     open_nl_won_expected  = 0.0   # sum(prob) for open Q-NL deals → expected won count
     open_nl_lost_expected = 0.0   # sum(1-prob) for open Q-NL deals → expected lost count
-    open_acv_amounts      = []    # amounts of open deals with prob >= 0.5 (for ACV forecast)
 
     # Exclude known test deals
     EXCLUDED_DEALS = {
@@ -490,35 +489,22 @@ def process_hubspot_deals(deals_data, quarter="Q1", year=2026):
             prob = _get_stage_probability(props)
             open_nl_won_expected  += prob
             open_nl_lost_expected += (1.0 - prob)
-            if prob >= 0.5 and amount > 0:
-                open_acv_amounts.append(amount)
 
     # Common pace variables
     q_total_days     = (q_end - q_start).days + 1
     q_elapsed_days   = max((today_utc - q_start).days, 1)
     q_remaining_days = max(q_total_days - q_elapsed_days, 0)
-    trailing_window  = min(30, max(q_elapsed_days, 1))
-    trailing_start   = today_utc - timedelta(days=trailing_window)
 
-    # SQL forecast — trailing-30-day pace × remaining days
-    sqls_trailing = 0
-    pipeline_trailing_amt = 0.0
-    for deal in deals_data:
-        dp  = deal['properties']
-        cdt = _parse_dt(dp.get('createdate', ''))
-        if not (cdt and trailing_start <= cdt <= today_utc):
-            continue
-        if dp.get('pipeline', '') in SQL_PIPELINES and dp.get('demo_discovery_status', '') == 'Completed':
-            sqls_trailing += 1
-        if dp.get('pipeline', '') in NEW_LOGO_PIPELINES:
-            pipeline_trailing_amt += float(dp.get('amount', 0) or 0)
-
+    # SQL Forecast and Pipeline Created Forecast — Q-pace extrapolation
+    # (actual ÷ elapsed days) × total quarter days
+    # Note: pipeline forecast should be manually overridden in the dashboard
+    # when planned activities (bootcamps, events) are expected to exceed pace.
     if q_elapsed_days >= q_total_days:
         sql_forecast      = sqls_total
         pipeline_forecast = pipeline_created
     else:
-        sql_forecast      = sqls_total + round((sqls_trailing / trailing_window) * q_remaining_days)
-        pipeline_forecast = round(pipeline_created + (pipeline_trailing_amt / trailing_window) * q_remaining_days)
+        sql_forecast      = round(sqls_total * q_total_days / q_elapsed_days)
+        pipeline_forecast = round(pipeline_created * q_total_days / q_elapsed_days)
 
     # Win Rate Forecast — actual closes + probability-weighted open deals
     fcast_won   = overall_won  + open_nl_won_expected
@@ -528,9 +514,11 @@ def process_hubspot_deals(deals_data, quarter="Q1", year=2026):
         if (fcast_won + fcast_lost) > 0 else overall_wr
     )
 
-    # ACV Forecast — median of closed-won amounts + open deals with prob >= 50%
-    acv_forecast_amounts  = new_logo_amounts + open_acv_amounts
-    acv_forecast_overall  = round(statistics.median(acv_forecast_amounts), 2) if acv_forecast_amounts else acv_overall
+    # ACV Forecast — average ARR per expected closed-won deal
+    # Numerator: New Logo ARR Forecast (closed-won + probability-weighted open deals)
+    # Denominator: actual closed-won count + expected wins from open pipeline
+    expected_deal_count  = len(new_logo_amounts) + open_nl_won_expected
+    acv_forecast_overall = round(new_logo_forecast / expected_deal_count, 2) if expected_deal_count > 0 else acv_overall
 
     # Win rates
     overall_total = overall_won + overall_lost
@@ -614,7 +602,7 @@ def process_hubspot_deals(deals_data, quarter="Q1", year=2026):
             'overall':  {'value': acv_overall,         'count': len(new_logo_amounts)},
             'sal':      {'value': acv_sal,             'count': len(sal_amounts)},
             'aec':      {'value': acv_aec,             'count': len(aec_amounts)},
-            'forecast': {'value': acv_forecast_overall,'count': len(acv_forecast_amounts)},
+            'forecast': {'value': acv_forecast_overall,'count': round(expected_deal_count, 1)},
         },
     }
 
@@ -784,7 +772,7 @@ def save_kpis_to_db(kpis, quarter="Q1", year=2026):
         entry('ACV Forecast', 'Sales', 'Monthly',
               kpis['acv']['forecast']['value'], targets.get('ACV Forecast', targets['ACV (Overall)']),
               'HubSpot',
-              f"Median of closed-won + expected-win open deals ({kpis['acv']['forecast']['count']} deals)"),
+              f"Avg ARR per expected deal: NL Forecast ${kpis['new_logo_arr_forecast']['value']:,.0f} / {kpis['acv']['forecast']['count']} expected deals"),
 
         entry('ACV (SAL)', 'Sales', 'Monthly',
               kpis['acv']['sal']['value'], targets['ACV (SAL)'],
