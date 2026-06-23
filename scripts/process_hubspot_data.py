@@ -495,16 +495,37 @@ def process_hubspot_deals(deals_data, quarter="Q1", year=2026):
     q_elapsed_days   = max((today_utc - q_start).days, 1)
     q_remaining_days = max(q_total_days - q_elapsed_days, 0)
 
-    # SQL Forecast and Pipeline Created Forecast — Q-pace extrapolation
-    # (actual ÷ elapsed days) × total quarter days
-    # Note: pipeline forecast should be manually overridden in the dashboard
-    # when planned activities (bootcamps, events) are expected to exceed pace.
+    # SQL Forecast and Pipeline Created Forecast
+    # Strategy:
+    #   < 45 days into quarter → Q-pace (not enough recent history for trailing window)
+    #   ≥ 45 days into quarter → trailing 14-day pace × remaining days
+    #     (captures recent momentum: bootcamps, events, end-of-quarter push)
     if q_elapsed_days >= q_total_days:
         sql_forecast      = sqls_total
         pipeline_forecast = pipeline_created
-    else:
+    elif q_elapsed_days < 45:
+        # Early in quarter: full Q-pace extrapolation
         sql_forecast      = round(sqls_total * q_total_days / q_elapsed_days)
         pipeline_forecast = round(pipeline_created * q_total_days / q_elapsed_days)
+    else:
+        # Late in quarter: trailing 60-day pace × remaining days
+        trailing_days  = min(60, q_elapsed_days)
+        trail_start    = today_utc - timedelta(days=trailing_days)
+        sqls_trailing  = 0
+        pipe_trailing  = 0.0
+        for deal in deals_data:
+            dp  = deal['properties']
+            cdt = _parse_dt(dp.get('createdate', ''))
+            if not (cdt and trail_start <= cdt <= today_utc):
+                continue
+            if dp.get('pipeline', '') in SQL_PIPELINES and dp.get('demo_discovery_status', '') == 'Completed':
+                sqls_trailing += 1
+            if dp.get('pipeline', '') in NEW_LOGO_PIPELINES:
+                pipe_trailing += float(dp.get('amount', 0) or 0)
+        daily_sql  = sqls_trailing / trailing_days
+        daily_pipe = pipe_trailing  / trailing_days
+        sql_forecast      = sqls_total      + round(daily_sql  * q_remaining_days)
+        pipeline_forecast = pipeline_created + round(daily_pipe * q_remaining_days)
 
     # Win Rate Forecast — actual closes + probability-weighted open deals
     fcast_won   = overall_won  + open_nl_won_expected
