@@ -15,9 +15,18 @@ from dotenv import load_dotenv
 ROOT = Path(__file__).parent.parent
 load_dotenv(ROOT / ".env")
 
-HUBSPOT_API_KEY = os.environ.get("HUBSPOT_API_KEY", "")
+try:
+    HUBSPOT_API_KEY = st.secrets.get("HUBSPOT_API_KEY", "") or os.environ.get("HUBSPOT_API_KEY", "")
+except Exception:
+    HUBSPOT_API_KEY = os.environ.get("HUBSPOT_API_KEY", "")
 
 STAGE_CONFIG = {
+    "266892603": {
+        "label": "Onboarding Overview",
+        "color": "#5B21B6",
+        "bg": "#F5F3FF",
+        "border": "#A78BFA",
+    },
     "contractsent": {
         "label": "Vendor of Choice",
         "color": "#92400E",
