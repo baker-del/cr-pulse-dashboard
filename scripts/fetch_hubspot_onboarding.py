@@ -175,7 +175,6 @@ ONBOARDING_CATEGORY_MAP = {
 
 CLOSED_WON_PIPELINES = {
     "default":   ["closedwon"],
-    "47062345":  ["96961410"],
     "757781604": ["1102698292"],
 }
 PIPELINE_LABEL = {"default": "New Logo", "47062345": "Expansion", "757781604": "ClientSavvy"}
