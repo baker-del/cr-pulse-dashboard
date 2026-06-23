@@ -116,16 +116,26 @@ def main():
     m4.metric("Expansion",   len(expansion))
     m5.metric("Total ARR",   f"${total_arr:,.0f}")
 
-    # ── Summary table: month × stage ──────────────────────────────────────────
-    STAGE_ORDER = [
-        "Onboarding Overview",
-        "Vendor of Choice",
-        "Verbal / Out for Sig",
-        "Contract Executed",
-        "Closed Won",
+    # ── Summary table: rows=stage group, columns=month ────────────────────────
+    STAGE_GROUPS = [
+        {
+            "label":  "Onboarding Overview / Vendor of Choice",
+            "stages": {"Onboarding Overview", "Vendor of Choice"},
+            "color":  "#92400E", "bg": "#FFFBEB",
+        },
+        {
+            "label":  "Verbal / Out for Sig + Contract Executed",
+            "stages": {"Verbal / Out for Sig", "Contract Executed"},
+            "color":  "#1E40AF", "bg": "#EFF6FF",
+        },
+        {
+            "label":  "Closed Won",
+            "stages": {"Closed Won"},
+            "color":  "#065F46", "bg": "#F0FDF4",
+        },
     ]
 
-    # Build pivot: month_key → stage_label → count & ARR
+    # Build pivot: month_key → stage_label → {n, arr}
     pivot = defaultdict(lambda: defaultdict(lambda: {"n": 0, "arr": 0}))
     month_keys_seen = []
     for d in deals:
@@ -135,91 +145,87 @@ def main():
         pivot[mk][label]["arr"] += d.get("arr", 0)
         if mk not in month_keys_seen:
             month_keys_seen.append(mk)
-
     month_keys_seen = sorted(month_keys_seen)
-    stages_present  = [s for s in STAGE_ORDER if any(pivot[mk].get(s) for mk in month_keys_seen)]
 
-    # Build HTML table
-    col_w_month = "110px"
-    col_w_stage = "130px"
+    def group_val(mk, group):
+        n   = sum(pivot[mk][s]["n"]   for s in group["stages"])
+        arr = sum(pivot[mk][s]["arr"] for s in group["stages"])
+        return n, arr
 
-    header_cells = (
-        f'<th style="text-align:left;padding:6px 10px;white-space:nowrap;'
-        f'width:{col_w_month};font-size:12px;border-bottom:2px solid #E5E7EB;">Month</th>'
-    )
-    for s in stages_present:
-        cfg = STAGE_COLORS.get(s, {"color": "#374151"})
-        header_cells += (
-            f'<th style="text-align:center;padding:6px 10px;white-space:nowrap;'
-            f'width:{col_w_stage};font-size:12px;border-bottom:2px solid #E5E7EB;'
-            f'color:{cfg["color"]};">{s}</th>'
-        )
-    header_cells += (
-        '<th style="text-align:center;padding:6px 10px;font-size:12px;'
-        'border-bottom:2px solid #E5E7EB;font-weight:700;">Total</th>'
-        '<th style="text-align:right;padding:6px 10px;font-size:12px;'
-        'border-bottom:2px solid #E5E7EB;font-weight:700;">ARR</th>'
-    )
-
-    rows_html = ""
+    # Header row: blank label col + one col per month + Total
+    th = '<th style="text-align:left;padding:7px 12px;font-size:12px;border-bottom:2px solid #E5E7EB;min-width:220px;">Stage Group</th>'
     for mk in month_keys_seen:
-        is_now   = mk == today.strftime("%Y-%m")
-        is_past  = mk < today.strftime("%Y-%m")
-        label    = datetime.strptime(mk, "%Y-%m").strftime("%b %Y")
-        if is_now:
-            label += " 📍"
-        row_bg   = "#F0FDF4" if is_now else ("#FAFAFA" if is_past else "#FFFFFF")
-        row_total = sum(pivot[mk][s]["n"]   for s in stages_present)
-        row_arr   = sum(pivot[mk][s]["arr"] for s in stages_present)
-
-        cells = (
-            f'<td style="padding:6px 10px;font-size:12px;font-weight:600;'
-            f'white-space:nowrap;border-bottom:1px solid #F3F4F6;">{label}</td>'
+        is_now  = mk == today.strftime("%Y-%m")
+        is_past = mk < today.strftime("%Y-%m")
+        mlabel  = datetime.strptime(mk, "%Y-%m").strftime("%b %Y")
+        col_style = (
+            "background:#F0FDF4;color:#065F46;font-weight:700;" if is_now else
+            "color:#6B7280;" if is_past else "color:#111827;"
         )
-        for s in stages_present:
-            n = pivot[mk][s]["n"]
-            cfg = STAGE_COLORS.get(s, {"color": "#374151", "bg": "#F9FAFB"})
-            cell_bg = cfg["bg"] if n else "transparent"
+        th += (
+            f'<th style="text-align:center;padding:7px 12px;font-size:12px;'
+            f'border-bottom:2px solid #E5E7EB;white-space:nowrap;{col_style}">'
+            f'{"📍 " if is_now else ""}{mlabel}</th>'
+        )
+    th += '<th style="text-align:center;padding:7px 12px;font-size:12px;border-bottom:2px solid #E5E7EB;font-weight:700;">Total</th>'
+
+    # Data rows
+    rows_html = ""
+    for g in STAGE_GROUPS:
+        row_total_n   = sum(group_val(mk, g)[0] for mk in month_keys_seen)
+        row_total_arr = sum(group_val(mk, g)[1] for mk in month_keys_seen)
+        cells = (
+            f'<td style="padding:7px 12px;font-size:12px;font-weight:600;'
+            f'color:{g["color"]};border-bottom:1px solid #F3F4F6;">{g["label"]}</td>'
+        )
+        for mk in month_keys_seen:
+            n, arr = group_val(mk, g)
+            is_now = mk == today.strftime("%Y-%m")
+            cell_bg = g["bg"] if n else ("#F0FDF4" if is_now else "transparent")
+            val_html = (
+                f'<b>{n}</b><div style="font-size:10px;color:#6B7280;">${arr:,.0f}</div>'
+                if n else '<span style="color:#D1D5DB;">—</span>'
+            )
             cells += (
-                f'<td style="text-align:center;padding:6px 10px;font-size:12px;'
-                f'border-bottom:1px solid #F3F4F6;background:{cell_bg};">'
-                f'{"<b>" + str(n) + "</b>" if n else "<span style=\'color:#D1D5DB;\'>—</span>"}</td>'
+                f'<td style="text-align:center;padding:7px 12px;font-size:12px;'
+                f'border-bottom:1px solid #F3F4F6;background:{cell_bg};">{val_html}</td>'
             )
         cells += (
-            f'<td style="text-align:center;padding:6px 10px;font-size:12px;'
-            f'font-weight:700;border-bottom:1px solid #F3F4F6;">{row_total}</td>'
-            f'<td style="text-align:right;padding:6px 10px;font-size:12px;'
-            f'border-bottom:1px solid #F3F4F6;">${row_arr:,.0f}</td>'
+            f'<td style="text-align:center;padding:7px 12px;font-size:12px;font-weight:700;'
+            f'border-bottom:1px solid #F3F4F6;">'
+            f'<b>{row_total_n}</b>'
+            f'<div style="font-size:10px;color:#6B7280;">${row_total_arr:,.0f}</div></td>'
         )
-        rows_html += f'<tr style="background:{row_bg};">{cells}</tr>'
+        rows_html += f'<tr>{cells}</tr>'
 
     # Totals footer
-    footer_cells = '<td style="padding:6px 10px;font-size:12px;font-weight:700;border-top:2px solid #E5E7EB;">Total</td>'
-    grand_n   = 0
-    grand_arr = 0
-    for s in stages_present:
-        col_n   = sum(pivot[mk][s]["n"]   for mk in month_keys_seen)
-        col_arr = sum(pivot[mk][s]["arr"] for mk in month_keys_seen)
-        grand_n   += col_n
-        grand_arr += col_arr
-        footer_cells += (
-            f'<td style="text-align:center;padding:6px 10px;font-size:12px;font-weight:700;'
-            f'border-top:2px solid #E5E7EB;">{col_n}</td>'
+    grand_n   = sum(d.get("arr", 0) for d in deals)  # reuse arr for footer arr
+    foot_cells = '<td style="padding:7px 12px;font-size:12px;font-weight:700;border-top:2px solid #E5E7EB;">Total</td>'
+    all_total_n = 0
+    for mk in month_keys_seen:
+        col_n   = sum(group_val(mk, g)[0] for g in STAGE_GROUPS)
+        col_arr = sum(group_val(mk, g)[1] for g in STAGE_GROUPS)
+        all_total_n += col_n
+        is_now = mk == today.strftime("%Y-%m")
+        foot_cells += (
+            f'<td style="text-align:center;padding:7px 12px;font-size:12px;font-weight:700;'
+            f'border-top:2px solid #E5E7EB;{"background:#F0FDF4;" if is_now else ""}">'
+            f'<b>{col_n}</b>'
+            f'<div style="font-size:10px;color:#6B7280;">${col_arr:,.0f}</div></td>'
         )
-    footer_cells += (
-        f'<td style="text-align:center;padding:6px 10px;font-size:12px;font-weight:700;'
-        f'border-top:2px solid #E5E7EB;">{grand_n}</td>'
-        f'<td style="text-align:right;padding:6px 10px;font-size:12px;font-weight:700;'
-        f'border-top:2px solid #E5E7EB;">${grand_arr:,.0f}</td>'
+    foot_cells += (
+        f'<td style="text-align:center;padding:7px 12px;font-size:12px;font-weight:700;'
+        f'border-top:2px solid #E5E7EB;"><b>{all_total_n}</b>'
+        f'<div style="font-size:10px;color:#6B7280;">${total_arr:,.0f}</div></td>'
     )
 
     table_html = (
-        '<div style="overflow-x:auto;margin:12px 0 4px 0;">'
+        '<div style="overflow-x:auto;margin:16px 0 4px 0;">'
         '<table style="border-collapse:collapse;width:100%;background:#FFFFFF;'
         'border-radius:8px;border:1px solid #E5E7EB;font-family:Inter,sans-serif;">'
-        f'<thead><tr style="background:#F9FAFB;">{header_cells}</tr></thead>'
+        f'<thead><tr style="background:#F9FAFB;">{th}</tr></thead>'
         f'<tbody>{rows_html}</tbody>'
-        f'<tfoot><tr style="background:#F9FAFB;">{footer_cells}</tr></tfoot>'
+        f'<tfoot><tr style="background:#F9FAFB;">{foot_cells}</tr></tfoot>'
         '</table></div>'
     )
     st.markdown(table_html, unsafe_allow_html=True)
