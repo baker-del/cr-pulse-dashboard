@@ -162,15 +162,15 @@ ONBOARDING_STAGE_MAP = {
 }
 
 ONBOARDING_CATEGORY_MAP = {
-    "1334736025": "Not Started",
-    "1334736026": "In Progress",
-    "1334736027": "In Progress",
-    "1334736028": "In Progress",
-    "1334736029": "In Progress",
-    "1334895633": "In Progress",
-    "1334895634": "In Progress",
-    "1334736030": "Survey Launched",
-    "1334736031": "Failure to Launch",
+    "1334736025": "Not Started",            # Handoff to Onboarding — deal exists but kickoff not done
+    "1334736026": "Onboarding In Progress", # Client Kickoff
+    "1334736027": "Onboarding In Progress", # Onboarding Plan Completed
+    "1334736028": "Onboarding In Progress", # Set Up Systems
+    "1334736029": "Onboarding In Progress", # Set Up Integrations
+    "1334895633": "Onboarding In Progress", # Training & Enablement
+    "1334895634": "Onboarding Complete",    # Survey Launch Readiness — fully onboarded, survey pending
+    "1334736030": "Survey Launched",        # Survey Launch
+    "1334736031": "Not Started",            # Failure to Launch — stuck, treat as blocked
 }
 
 CLOSED_WON_PIPELINES = {
@@ -273,6 +273,13 @@ def fetch_onboarding_status(owners: dict, today: date) -> list:
     all_sales.sort(key=lambda x: x["closedate"])
     print(f"  → YTD closed-won (NL + significant Exp): {len(all_sales)} deals")
 
+    # Stage order for velocity context (higher = further along)
+    STAGE_ORDER = {
+        "1334736025": 1, "1334736026": 2, "1334736027": 3,
+        "1334736028": 4, "1334736029": 5, "1334895633": 6,
+        "1334895634": 7, "1334736030": 8, "1334736031": 0,
+    }
+
     # 3. Cross-reference
     status_rows = []
     for d in all_sales:
@@ -283,29 +290,34 @@ def fetch_onboarding_status(owners: dict, today: date) -> list:
             stage_label = ob["stage_label"]
             category = ob["category"]
             ob_cd_str = ob.get("ob_closedate", "")
+            # For Survey Launched: days = closed-won → launch date (milestone time)
+            # For Onboarding Complete: days = closed-won → today (still waiting on survey)
+            # All others: days = closed-won → today
             if stage_id == "1334736030" and ob_cd_str:
-                # Survey Launched: days = closed-won → survey launch date
                 launch_dt = datetime.strptime(ob_cd_str, "%Y-%m-%d").date()
-                days_elapsed = (launch_dt - cd).days
+                days_elapsed = max((launch_dt - cd).days, 0)
             else:
                 days_elapsed = (today - cd).days
+            stage_order = STAGE_ORDER.get(stage_id, 0)
         else:
             stage_label = "—"
             category = "Not Started"
             days_elapsed = (today - cd).days
+            stage_order = 0
 
         status_rows.append({
-            "id":            d["id"],
-            "name":          d["name"],
-            "arr":           d["arr"],
-            "pipeline":      d["pipeline"],
-            "closedate":     d["closedate"],
-            "days_elapsed":  days_elapsed,
-            "stage_label":   stage_label,
-            "category":      category,
-            "deal_url":      d["deal_url"],
-            "vertical":      d["vertical"],
-            "csm":           d["owner"],
+            "id":           d["id"],
+            "name":         d["name"],
+            "arr":          d["arr"],
+            "pipeline":     d["pipeline"],
+            "closedate":    d["closedate"],
+            "days_elapsed": days_elapsed,
+            "stage_label":  stage_label,
+            "stage_order":  stage_order,
+            "category":     category,
+            "deal_url":     d["deal_url"],
+            "vertical":     d["vertical"],
+            "csm":          d["owner"],
         })
 
     return status_rows
