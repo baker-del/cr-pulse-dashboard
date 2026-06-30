@@ -89,6 +89,11 @@ SQL_PIPELINES = ['default']                     # Same as New Logo
 
 # Win rate: only count deals created on or after this date to exclude historical cleanup deals
 # (old CFT/renewal deals from 2023-2024 being marked closed-lost in Q1 2026)
+# Deal IDs excluded from all KPI calculations (manually slipped to next quarter)
+EXCLUDED_DEAL_IDS = {
+    '47172941088',  # Ardurra - Winback & Expansion ($60k) — slipped to Q3 2026
+}
+
 WIN_RATE_MIN_CREATEDATE = datetime(2025, 1, 1, tzinfo=timezone.utc)
 
 # Win rate: exclude deals closed in the first N business days of a quarter (end-of-prior-quarter cleanup)
@@ -325,8 +330,10 @@ def process_hubspot_deals(deals_data, quarter="Q1", year=2026):
         pipeline   = props.get('pipeline', '')
         dealname   = props.get('dealname', '')
 
-        # Skip test deals
+        # Skip test deals and manually excluded deals
         if dealname.lower().strip() in EXCLUDED_DEALS:
+            continue
+        if str(deal.get('id', '')) in EXCLUDED_DEAL_IDS:
             continue
         amount     = float(props.get('amount', 0) or 0)
         dealtype   = (props.get('dealtype') or '').lower()
