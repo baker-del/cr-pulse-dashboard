@@ -47,6 +47,7 @@ PROPERTIES = [
     'deal_source_bucket',             # Marketing Driven / Sales Driven / CSM Driven
     'hs_deal_stage_probability',
     'ae_gut_forecast',
+    'hubspot_owner_id',
     'company_industry_dropdown',
     # Stage entry dates — used for funnel conversion rate calculations
     'hs_v2_date_entered_qualifiedtobuy',          # 1 - Discovery (Sales Pipeline)
