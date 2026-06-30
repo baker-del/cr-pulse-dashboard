@@ -250,7 +250,10 @@ def main():
 
     # ── Onboarding Status Table ────────────────────────────────────────────────
     st.markdown("---")
-    st.markdown("### 2026 Customer Onboarding Status")
+    st.markdown("### 2026 Customer Onboarding Status (Apr 1+)")
+
+    ONBOARDING_CUTOFF = date(2026, 4, 1)
+    status_rows = [r for r in status_rows if r.get("closedate", "") >= "2026-04-01"]
 
     if status_rows:
         # Apply manual overrides on top of HubSpot-derived status
