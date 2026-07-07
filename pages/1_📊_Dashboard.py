@@ -132,6 +132,12 @@ DISPLAY_NAME_MAP = {
 # KPIs where we extract the forecast from comments and show it as Actual
 FORECAST_KPIS = {'New Logo Pipeline Created'}
 
+# KPIs with revised targets (vs original board plan), keyed by quarter
+REVISED_KPIS = {
+    'Q3': {'New Logo ARR', 'New Logo ARR Forecast', 'Total New ARR Forecast',
+           'SQL', 'New Logo Pipeline Created'},
+}
+
 
 def extract_forecast(comments: str):
     """Return a numeric string for the forecast embedded in comments.
@@ -408,6 +414,8 @@ def render_section(key: str, kpi_names: list, kpis_df: pd.DataFrame, fallback_df
     rows = []
     for name in kpi_names:
         mapped_name  = DISPLAY_NAME_MAP.get(name, name)
+        if name in REVISED_KPIS.get(quarter, set()):
+            mapped_name = f"{mapped_name} (revised)"
         display_name = f"  ↳  {mapped_name}" if name in SUB_KPIS else mapped_name
         if name in existing:
             kpi = existing[name]
@@ -711,22 +719,25 @@ def render_exec_summary(df, quarter, year, pct_elapsed, days_left):
         unsafe_allow_html=True,
     )
     m1, m2, m3, m4, m5 = st.columns(5)
+    _rev = REVISED_KPIS.get(quarter, set())
+    _r   = lambda kpi, label: f"{label} (revised)" if kpi in _rev else label
+
     with m1:
         if total_forecast is not None and total_target:
             pct = total_forecast / total_target * 100
-            st.metric("ARR Forecast", f"${total_forecast:,.0f}", f"{pct:.0f}% of target",
+            st.metric(_r('Total New ARR Forecast', "ARR Forecast"), f"${total_forecast:,.0f}", f"{pct:.0f}% of target",
                       delta_color="inverse" if total_forecast < total_target else "normal")
     with m2:
         nl_f = nl_arr_forecast if nl_arr_forecast is not None else nl_arr
         nl_f_tgt = nl_arr_forecast_target if nl_arr_forecast_target is not None else nl_target
         if nl_f is not None:
             delta = f"{nl_f/nl_f_tgt*100:.0f}% of target" if nl_f_tgt else ""
-            st.metric("New Logo ARR Forecast", f"${nl_f:,.0f}", delta,
+            st.metric(_r('New Logo ARR Forecast', "New Logo ARR Forecast"), f"${nl_f:,.0f}", delta,
                       delta_color="inverse" if nl_f_tgt and nl_f < nl_f_tgt else "normal")
     with m3:
         if pipeline is not None:
             delta = f"{pipeline/pipeline_target*100:.0f}% of target" if pipeline_target else ""
-            st.metric("Pipeline Forecast", f"${pipeline:,.0f}", delta,
+            st.metric(_r('New Logo Pipeline Created', "Pipeline Forecast"), f"${pipeline:,.0f}", delta,
                       delta_color="inverse" if pipeline_target and pipeline < pipeline_target else "normal")
     with m4:
         if wr_overall is not None:
@@ -736,7 +747,7 @@ def render_exec_summary(df, quarter, year, pct_elapsed, days_left):
     with m5:
         if sqls is not None:
             delta = f"{sqls/sql_target*100:.0f}% of {int(sql_target)}" if sql_target else ""
-            st.metric("SQL Forecast", f"{int(sqls)}", delta,
+            st.metric(_r('SQL', "SQL Forecast"), f"{int(sqls)}", delta,
                       delta_color="inverse" if sql_target and sqls < sql_target else "normal")
 
     # ROW 2: Retention & Expansion
