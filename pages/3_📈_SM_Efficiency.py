@@ -233,8 +233,8 @@ VTGT = {
 }
 
 # Q3 revised totals (sub-targets by SAL/AEC not yet set for Q3)
-Q3_TOTAL_TGTS = {'mql': 285, 'sql': 120, 'bookings': 300000, 'pipeline': 2500000}
-Q4_TOTAL_TGTS = {'mql': 285, 'sql': 125, 'bookings': 400000, 'pipeline': 2500000}
+Q3_TOTAL_TGTS = {'mql': 285, 'sql': 120, 'bookings': 350000, 'pipeline': 2500000}
+Q4_TOTAL_TGTS = {'mql': 285, 'sql': 125, 'bookings': 510000, 'pipeline': 2500000}
 
 
 def _card_html(label, value, target_str, border, bg):
