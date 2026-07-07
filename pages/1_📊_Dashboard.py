@@ -136,6 +136,8 @@ FORECAST_KPIS = {'New Logo Pipeline Created'}
 REVISED_KPIS = {
     'Q3': {'New Logo ARR', 'New Logo ARR Forecast', 'Total New ARR Forecast',
            'SQL', 'New Logo Pipeline Created'},
+    'Q4': {'New Logo ARR', 'New Logo ARR Forecast', 'Total New ARR Forecast',
+           'New Logo Pipeline Created'},
 }
 
 

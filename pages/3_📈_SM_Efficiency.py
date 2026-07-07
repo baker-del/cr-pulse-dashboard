@@ -233,7 +233,8 @@ VTGT = {
 }
 
 # Q3 revised totals (sub-targets by SAL/AEC not yet set for Q3)
-Q3_TOTAL_TGTS = {'mql': 285, 'sql': 120, 'bookings': 400000, 'pipeline': 2500000}
+Q3_TOTAL_TGTS = {'mql': 285, 'sql': 120, 'bookings': 300000, 'pipeline': 2500000}
+Q4_TOTAL_TGTS = {'mql': 285, 'sql': 125, 'bookings': 400000, 'pipeline': 2500000}
 
 
 def _card_html(label, value, target_str, border, bg):
@@ -260,7 +261,7 @@ def _arrow_html(rate, label, border):
 
 def render_funnel_tab(v):
     tgt = VTGT[v]
-    _q3_note = " (Q2 tgt)" if QUARTER == 'Q3' else ""
+    _q3_note = " (Q2 tgt)" if QUARTER in ('Q3', 'Q4') else ""
     mql_n,    mql_f    = _val(f'SM_{v}_MQL_Volume')
     mqlsal_n, mqlsal_f = _val(f'SM_{v}_MQL_SAL')
     salsql_n, salsql_f = _val(f'SM_{v}_SAL_SQL')
@@ -350,9 +351,11 @@ def render_total_funnel():
     pipe_f   = f"${tot_pipe:,.0f}" if tot_pipe else '—'
     mqlsql_f = f"{tot_mqlsql_n:.1f}%" if tot_mqlsql_n is not None else '—'
 
-    _is_q3 = (QUARTER == 'Q3')
-    _ttgt   = Q3_TOTAL_TGTS if _is_q3 else {'mql': 285, 'sql': 124, 'bookings': 472000, 'pipeline': 2200000}
-    _rev    = lambda lbl: f"{lbl} (revised)" if _is_q3 else lbl
+    _is_revised = QUARTER in ('Q3', 'Q4')
+    _ttgt = (Q3_TOTAL_TGTS if QUARTER == 'Q3' else
+             Q4_TOTAL_TGTS if QUARTER == 'Q4' else
+             {'mql': 285, 'sql': 124, 'bookings': 472000, 'pipeline': 2200000})
+    _rev  = lambda lbl: f"{lbl} (revised)" if _is_revised else lbl
 
     MQL_SAL_BLENDED = 49.5   # (180×55 + 105×40) / 285
     _, c_mql,    bg_mql    = _sts(tot_mql  if tot_mql  else None, _ttgt['mql'])
@@ -361,8 +364,8 @@ def render_total_funnel():
     _, c_sql,    bg_sql    = _sts(tot_sql   if tot_sql  else None, _ttgt['sql'])
     _, c_book,   bg_book   = _sts(tot_book  if tot_book else None, _ttgt['bookings'])
 
-    _sql_tgt_lbl  = '120' if _is_q3 else '124'
-    _book_tgt_lbl = '$400K' if _is_q3 else '$472K'
+    _sql_tgt_lbl  = str(_ttgt['sql'])
+    _book_tgt_lbl = f"${_ttgt['bookings']//1000}K"
 
     ca, cb, cc, cd, ce, cf, cg = st.columns([4, 2, 4, 2, 4, 2, 4])
     ca.markdown(_card_html('ICP MQLs',   mql_f,  '285',                c_mql,    bg_mql),    unsafe_allow_html=True)
@@ -375,10 +378,10 @@ def render_total_funnel():
 
     st.markdown("<div style='height:14px'></div>", unsafe_allow_html=True)
 
-    _pipe_tgt_n   = _ttgt['pipeline']
-    _pipe_tgt_lbl = '$2.5M' if _is_q3 else '$2.2M'
-    _book_tgt_n   = _ttgt['bookings']
-    _book_tgt_lbl2= '$400K' if _is_q3 else '$472K'
+    _pipe_tgt_n    = _ttgt['pipeline']
+    _pipe_tgt_lbl  = f"${_ttgt['pipeline']/1_000_000:.1f}M"
+    _book_tgt_n    = _ttgt['bookings']
+    _book_tgt_lbl2 = f"${_ttgt['bookings']//1000}K"
 
     s1, s2, s3, s4 = st.columns(4)
     ei = _sts(icp_n,        90)[0]

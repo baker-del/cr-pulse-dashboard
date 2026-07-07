@@ -6,9 +6,9 @@
 annual:
   year: 2026
   hubspot_kpis:
-    New Logo Pipeline Created: "10967504"
-    New Logo ARR:              "2078230"
-    SQL:                       "524"
+    New Logo Pipeline Created: "8708344"   # revised: Q1 $1.51M + Q2 $2.20M + Q3 $2.5M + Q4 $2.5M (board plan $10.97M)
+    New Logo ARR:              "1492386"   # revised: Q1 $321k + Q2 $472k + Q3 $300k + Q4 $400k (board plan $2.08M)
+    SQL:                       "491"       # revised: 122+124+120+125 (board plan 524)
     Expansion ARR:             "214000"
 
 Q1:
@@ -65,14 +65,15 @@ Q2:
     SM_AEC_Demo_ROI:                    "70%"
 
 Q3:
+
   year: 2026
   retention_kpis:
     GRR: "90%"
     NRR: "95%"
   hubspot_kpis:
-    Total New ARR Forecast:             "453500"    # NL $400,000 + Exp $53,500 (revised; board plan $654.5K)
-    New Logo ARR Forecast:              "400000"    # revised; board plan $601K
-    New Logo ARR:                       "400000"    # revised; board plan $601K
+    Total New ARR Forecast:             "353500"    # NL $300,000 + Exp $53,500 (revised; board plan $654.5K)
+    New Logo ARR Forecast:              "300000"    # revised; board plan $601K
+    New Logo ARR:                       "300000"    # revised; board plan $601K
     Expansion ARR:                      "53500"
     SQL:                                "120"       # revised; board plan 143
     New Logo Pipeline Created:          "2500000"   # revised; board plan $3.18M
@@ -84,6 +85,42 @@ Q3:
     ACV (SAL):                          ""
     ACV (AEC):                          ""
     Expansion Pipeline (Next 180 Days): "134000"
+  sm_kpis:
+    SM_SAL_Pipeline_ARR:                ""
+    SM_AEC_Pipeline_ARR:                ""
+    SM_SAL_SQL_Volume:                  ""
+    SM_AEC_SQL_Volume:                  ""
+    SM_SAL_Win_Rate:                    "25%"
+    SM_AEC_Win_Rate:                    "25%"
+    SM_SAL_Bookings:                    ""
+    SM_AEC_Bookings:                    ""
+    SM_ICP_MQL_Share:                   "80%"
+    SM_SAL_MQL_SQL:                     "35%"
+    SM_AEC_MQL_SQL:                     "35%"
+    SM_SAL_Disc_Demo:                   "45%"
+    SM_AEC_Disc_Demo:                   "45%"
+    SM_AEC_Demo_ROI:                    "70%"
+
+Q4:
+  year: 2026
+  retention_kpis:
+    GRR: "90%"
+    NRR: "95%"
+  hubspot_kpis:
+    Total New ARR Forecast:             "464200"    # NL $400,000 + Exp $64,200 (revised; board plan $748.2K)
+    New Logo ARR Forecast:              "400000"    # revised; board plan $684K
+    New Logo ARR:                       "400000"    # revised; board plan $684K
+    Expansion ARR:                      "64200"
+    SQL:                                "125"
+    New Logo Pipeline Created:          "2500000"   # revised; board plan $2.70M
+    Current Qtr Qualified Pipeline:     ""
+    Win Rate (Overall):                 "25%"
+    Win Rate (SAL):                     "25%"
+    Win Rate (AEC):                     "25%"
+    ACV (Overall):                      "28000"
+    ACV (SAL):                          ""
+    ACV (AEC):                          ""
+    Expansion Pipeline (Next 180 Days): "161000"
   sm_kpis:
     SM_SAL_Pipeline_ARR:                ""
     SM_AEC_Pipeline_ARR:                ""
