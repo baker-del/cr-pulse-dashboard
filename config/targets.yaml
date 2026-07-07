@@ -70,12 +70,12 @@ Q3:
     GRR: "90%"
     NRR: "95%"
   hubspot_kpis:
-    Total New ARR Forecast:             "453500"    # NL $400,000 + Exp $53,500 (realistic, board plan NL was $601K)
-    New Logo ARR Forecast:              "400000"
-    New Logo ARR:                       "400000"
+    Total New ARR Forecast:             "453500"    # NL $400,000 + Exp $53,500 (revised; board plan $654.5K)
+    New Logo ARR Forecast:              "400000"    # revised; board plan $601K
+    New Logo ARR:                       "400000"    # revised; board plan $601K
     Expansion ARR:                      "53500"
-    SQL:                                "120"
-    New Logo Pipeline Created:          "2500000"
+    SQL:                                "120"       # revised; board plan 143
+    New Logo Pipeline Created:          "2500000"   # revised; board plan $3.18M
     Current Qtr Qualified Pipeline:     ""
     Win Rate (Overall):                 "25%"
     Win Rate (SAL):                     "25%"
