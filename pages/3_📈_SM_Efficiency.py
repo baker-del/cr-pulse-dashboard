@@ -232,6 +232,9 @@ VTGT = {
             'sql': 57, 'win': 25.0, 'bookings': 292000, 'pipeline': 1600000, 'cost_sql': 1700},
 }
 
+# Q3 revised totals (sub-targets by SAL/AEC not yet set for Q3)
+Q3_TOTAL_TGTS = {'mql': 285, 'sql': 120, 'bookings': 400000, 'pipeline': 2500000}
+
 
 def _card_html(label, value, target_str, border, bg):
     return (
@@ -257,6 +260,7 @@ def _arrow_html(rate, label, border):
 
 def render_funnel_tab(v):
     tgt = VTGT[v]
+    _q3_note = " (Q2 tgt)" if QUARTER == 'Q3' else ""
     mql_n,    mql_f    = _val(f'SM_{v}_MQL_Volume')
     mqlsal_n, mqlsal_f = _val(f'SM_{v}_MQL_SAL')
     salsql_n, salsql_f = _val(f'SM_{v}_SAL_SQL')
@@ -284,9 +288,9 @@ def render_funnel_tab(v):
     cc.markdown(_card_html('SALs (est.)', str(sal_est) if sal_est else '—',
                             f"{tgt['mql_sal']:.0f}% of MQLs", c_mqlsal, bg_mqlsal), unsafe_allow_html=True)
     cd.markdown(_arrow_html(salsql_f, 'SAL→SQL', c_salsql), unsafe_allow_html=True)
-    ce.markdown(_card_html('SQLs (Mkt)', sql_f, str(tgt['sql']), c_sql, bg_sql), unsafe_allow_html=True)
+    ce.markdown(_card_html(f'SQLs (Mkt){_q3_note}', sql_f, str(tgt['sql']), c_sql, bg_sql), unsafe_allow_html=True)
     cf.markdown(_arrow_html(win_f, 'Win Rate', c_win), unsafe_allow_html=True)
-    cg.markdown(_card_html('Bookings',   book_f,
+    cg.markdown(_card_html(f'Bookings{_q3_note}', book_f,
                             '$180K' if v == 'SAL' else '$292K', c_book, bg_book), unsafe_allow_html=True)
 
     st.markdown("<div style='height:14px'></div>", unsafe_allow_html=True)
@@ -299,7 +303,7 @@ def render_funnel_tab(v):
     ed = _sts(disc_n,   45)[0]
     s1.metric("% MQLs ICP",    icp_f,    f"{ei} Target: 90%")
     s2.metric("Cost / SQL",    cost_f,   f"{ec} Target: ${tgt['cost_sql']:,}")
-    s3.metric("Pipeline",      pipe_f,   f"{ep} Target: ${'600K' if v == 'SAL' else '1.6M'}")
+    s3.metric(f"Pipeline{_q3_note}", pipe_f, f"{ep} Target: ${'600K' if v == 'SAL' else '1.6M'}")
     s4.metric("MQL→SQL (e2e)", mqlsql_f, f"{em} Target: {tgt['mql_sql']:.0f}%")
     s5.metric("Disc→Demo %",   disc_f,   f"{ed} Target: 45%")
 
@@ -346,33 +350,45 @@ def render_total_funnel():
     pipe_f   = f"${tot_pipe:,.0f}" if tot_pipe else '—'
     mqlsql_f = f"{tot_mqlsql_n:.1f}%" if tot_mqlsql_n is not None else '—'
 
+    _is_q3 = (QUARTER == 'Q3')
+    _ttgt   = Q3_TOTAL_TGTS if _is_q3 else {'mql': 285, 'sql': 124, 'bookings': 472000, 'pipeline': 2200000}
+    _rev    = lambda lbl: f"{lbl} (revised)" if _is_q3 else lbl
+
     MQL_SAL_BLENDED = 49.5   # (180×55 + 105×40) / 285
-    _, c_mql,    bg_mql    = _sts(tot_mql  if tot_mql  else None, 285)
+    _, c_mql,    bg_mql    = _sts(tot_mql  if tot_mql  else None, _ttgt['mql'])
     _, c_mqlsal, bg_mqlsal = _sts(mqlsal_pct, MQL_SAL_BLENDED)
     _, c_salsql, bg_salsql = _sts(salsql_pct, 60.0)
-    _, c_sql,    bg_sql    = _sts(tot_sql   if tot_sql  else None, 124)
-    _, c_book,   bg_book   = _sts(tot_book  if tot_book else None, 472000)
+    _, c_sql,    bg_sql    = _sts(tot_sql   if tot_sql  else None, _ttgt['sql'])
+    _, c_book,   bg_book   = _sts(tot_book  if tot_book else None, _ttgt['bookings'])
+
+    _sql_tgt_lbl  = '120' if _is_q3 else '124'
+    _book_tgt_lbl = '$400K' if _is_q3 else '$472K'
 
     ca, cb, cc, cd, ce, cf, cg = st.columns([4, 2, 4, 2, 4, 2, 4])
-    ca.markdown(_card_html('ICP MQLs',   mql_f,  '285',               c_mql,    bg_mql),    unsafe_allow_html=True)
-    cb.markdown(_arrow_html(mqlsal_f, 'MQL→SAL', c_mqlsal),                                  unsafe_allow_html=True)
-    cc.markdown(_card_html('SALs (est.)', sal_f,  '~50% of MQLs',     c_mqlsal, bg_mqlsal), unsafe_allow_html=True)
-    cd.markdown(_arrow_html(salsql_f, 'SAL→SQL', c_salsql),                                  unsafe_allow_html=True)
-    ce.markdown(_card_html('SQLs (Mkt)', sql_f,  '124',               c_sql,    bg_sql),    unsafe_allow_html=True)
-    cf.markdown(_arrow_html('—',      'Win Rate', '#cccccc'),                                 unsafe_allow_html=True)
-    cg.markdown(_card_html('Bookings',   book_f,  '$472K',             c_book,   bg_book),   unsafe_allow_html=True)
+    ca.markdown(_card_html('ICP MQLs',   mql_f,  '285',                c_mql,    bg_mql),    unsafe_allow_html=True)
+    cb.markdown(_arrow_html(mqlsal_f, 'MQL→SAL', c_mqlsal),                                   unsafe_allow_html=True)
+    cc.markdown(_card_html('SALs (est.)', sal_f,  '~50% of MQLs',      c_mqlsal, bg_mqlsal), unsafe_allow_html=True)
+    cd.markdown(_arrow_html(salsql_f, 'SAL→SQL', c_salsql),                                   unsafe_allow_html=True)
+    ce.markdown(_card_html(_rev('SQLs (Mkt)'), sql_f,  _sql_tgt_lbl,   c_sql,    bg_sql),    unsafe_allow_html=True)
+    cf.markdown(_arrow_html('—',      'Win Rate', '#cccccc'),                                  unsafe_allow_html=True)
+    cg.markdown(_card_html(_rev('Bookings'),   book_f,  _book_tgt_lbl,  c_book,   bg_book),   unsafe_allow_html=True)
 
     st.markdown("<div style='height:14px'></div>", unsafe_allow_html=True)
 
+    _pipe_tgt_n   = _ttgt['pipeline']
+    _pipe_tgt_lbl = '$2.5M' if _is_q3 else '$2.2M'
+    _book_tgt_n   = _ttgt['bookings']
+    _book_tgt_lbl2= '$400K' if _is_q3 else '$472K'
+
     s1, s2, s3, s4 = st.columns(4)
     ei = _sts(icp_n,        90)[0]
-    ep = _sts(tot_pipe if tot_pipe else None, 2200000)[0]
+    ep = _sts(tot_pipe if tot_pipe else None, _pipe_tgt_n)[0]
     em = _sts(tot_mqlsql_n, 35.0)[0]
-    eb = _sts(tot_book  if tot_book  else None, 472000)[0]
-    s1.metric("% MQLs ICP",    icp_f,    f"{ei} Target: 90%")
-    s2.metric("MQL→SQL (e2e)", mqlsql_f, f"{em} Target: 35%")
-    s3.metric("Pipeline Total", pipe_f,  f"{ep} Target: $2.2M")
-    s4.metric("Bookings Total", book_f,  f"{eb} Target: $472K")
+    eb = _sts(tot_book  if tot_book  else None, _book_tgt_n)[0]
+    s1.metric("% MQLs ICP",              icp_f,    f"{ei} Target: 90%")
+    s2.metric("MQL→SQL (e2e)",           mqlsql_f, f"{em} Target: 35%")
+    s3.metric(_rev("Pipeline Total"),    pipe_f,   f"{ep} Target: {_pipe_tgt_lbl}")
+    s4.metric(_rev("Bookings Total"),    book_f,   f"{eb} Target: {_book_tgt_lbl2}")
 
 
 f_sal, f_aec, f_total = st.tabs(['🏢 SAL', '🏗️ AEC', '📊 Total'])
