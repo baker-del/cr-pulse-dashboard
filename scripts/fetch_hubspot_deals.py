@@ -48,6 +48,7 @@ PROPERTIES = [
     'hs_deal_stage_probability',
     'ae_gut_forecast',
     'hubspot_owner_id',
+    'bdr_owner',
     'company_industry_dropdown',
     # Stage entry dates — used for funnel conversion rate calculations
     'hs_v2_date_entered_qualifiedtobuy',          # 1 - Discovery (Sales Pipeline)
